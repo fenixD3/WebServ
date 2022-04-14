@@ -11,10 +11,14 @@
 
 #define POLL_TIMEOUT -1
 
+const short Server::ReadEvent[1] = {POLLIN};
+const short Server::WriteEvent[1] = {POLLOUT};
+const short Server::ReadWriteEvent[2] = {POLLIN, POLLOUT};
+
 Server::Server()
 {
     Init();
-    AddToPdfs(m_ListeningSocket, {POLLIN});
+    AddToPdfs(m_ListeningSocket, Server::ReadEvent, sizeof(Server::ReadEvent));
 }
 
 void Server::Run()
@@ -65,7 +69,7 @@ void Server::ReceiveRequest(int readable_socket, size_t socket_index)
         }
         else
         {
-            AddToPdfs(connected_socket, {POLLIN, POLLOUT});
+            AddToPdfs(connected_socket, Server::ReadWriteEvent, sizeof(Server::ReadWriteEvent));
 
             std::cout
                     << "New connection from "
@@ -116,7 +120,7 @@ void Server::Init()
     addrinfo hints = {};
     hints.ai_family = AF_UNSPEC; /// auto determining IPv4 or IPv6
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE | AI_CANONNAME; /// use my IP address as host. Write INADDR_ANY to IP address
+    hints.ai_flags = AI_PASSIVE; /// use my IP address as host. Write INADDR_ANY to IP address
 
     addrinfo *results;
     int rv;
@@ -159,8 +163,6 @@ void Server::Init()
     std::cout
         << "Host ip: "
         << GetPrintableIP(curr->ai_addr)
-        << "; Cannon name: "
-        << curr->ai_canonname
         << "; host address family: "
         << (curr->ai_family == AF_INET ? "IPv4" : "IPv6")
         << std::endl;
@@ -180,12 +182,12 @@ std::string Server::GetPrintableIP(sockaddr *addr_info) const
     return inet_ntop(addr_info->sa_family, GetInputAddr(addr_info), ip, sizeof(ip));
 }
 
-void Server::AddToPdfs(int socket, std::vector<short> events)
+void Server::AddToPdfs(int socket, const short *events, size_t events_size)
 {
     pollfd inserting = {};
     inserting.fd = socket;
 
-    for (size_t i = 0; i < events.size(); ++i)
+    for (size_t i = 0; i < events_size; ++i)
     {
         inserting.events |= events[i];
     }

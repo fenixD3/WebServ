@@ -3,22 +3,26 @@
 #include <vector>
 #include <poll.h>
 #include <sys/socket.h>
-#include <unordered_map>
+#include <map>
 #include <deque>
 
 #include "VirtualServer.h"
 
-#define DEF_PORT "6666"
+#define DEF_PORT "8080"
 #define LISTEN_BACKLOG 10
 
 class Server
 {
 private:
+    static const short ReadEvent[1];
+    static const short WriteEvent[1];
+    static const short ReadWriteEvent[2];
+
     int m_ListeningSocket;
     std::vector<pollfd> m_SocketsPdfs;
 
-    /*std::unordered_map<short, std::deque<VirtualServer>> m_VirtualServers;*/ /// заполняется из конфига: порт в виртуальные сервера
-    /*std::unordered_map<short, int> m_PortToSocket;*/ /// соответсиве виртуального порта в файловый дескриптор (видимо из Request формируется)
+    /*std::map<short, std::deque<VirtualServer>> m_VirtualServers;*/ /// заполняется из конфига: порт в виртуальные сервера
+    /*std::map<short, int> m_PortToSocket;*/ /// соответсиве виртуального порта в файловый дескриптор (видимо из Request формируется)
 
     /**
      * \todo
@@ -40,7 +44,7 @@ private:
     void SendResponse(int sendable_socket);
 
     void Init();
-    void AddToPdfs(int socket, std::vector<short> events);
+    void AddToPdfs(int socket, const short *events, size_t events_size);
     void DelFromPdfs(std::size_t deleted_idx);
 
     void *GetInputAddr(sockaddr *sa) const;
