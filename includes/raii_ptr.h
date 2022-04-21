@@ -17,7 +17,7 @@ private:
 
 public:
     raii_ptr()
-        : data(NULL)
+		: data(NULL)
     {}
 
     explicit raii_ptr(pointer p)
@@ -30,9 +30,9 @@ public:
     }
 
     raii_ptr(const raii_ptr& other)
-        : data(new T)
+        : data(other.data)
     {
-        *data = *other.data;
+        const_cast<raii_ptr&>(other).data = NULL;
     }
 
     raii_ptr& operator=(const raii_ptr& other)
@@ -50,6 +50,11 @@ public:
     {
         return data;
     }
+
+	pointer get() const
+	{
+		return data;
+	}
 
     operator bool() const
     {

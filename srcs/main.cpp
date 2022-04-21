@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "Server.h"
+#include "Cluster.h"
 
 int main(int ac, char **av)
 {
@@ -9,6 +9,7 @@ int main(int ac, char **av)
     {
         std::cerr << "Using default configuration" << std::endl;
     }
-    Server webserv;
+	FakeConfig fk;
+    Cluster webserv(fk);
     webserv.Run();
 }

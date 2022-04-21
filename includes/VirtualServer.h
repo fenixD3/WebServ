@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "ClientConnection.h"
-#include "raii_ptr.h"
+#include "config/IConfig.h"
 
 class VirtualServerBuilder;
 
@@ -13,6 +13,7 @@ private:
     std::string m_Port;
     std::string m_HostIP;
     std::string m_ServerName;
+	std::map<std::string, std::string> m_Locations;
     std::vector<ClientConnection> m_Connections;
 
 private:
@@ -29,13 +30,13 @@ public:
 class VirtualServerBuilder
 {
 private:
-    VirtualServerBuilder(/*const Config& config*/)
-//        : m_Config(config)
+    VirtualServerBuilder(const IConfig& config)
+        : m_Config(config)
     {}
 
 private:
     VirtualServer m_VS;
-//    const Config& m_Config;
+	const IConfig& m_Config;
 
 public:
     operator VirtualServer()
@@ -43,14 +44,15 @@ public:
         return m_VS;
     }
 
-    static VirtualServerBuilder Build(/*const Config& config*/)
+    static VirtualServerBuilder Build(const IConfig& config)
     {
-        return VirtualServerBuilder(/*config*/);
+		static VirtualServerBuilder builder(config);
+        return builder;
     }
 
     VirtualServerBuilder& AddServerPort()
     {
-//        m_VS.m_Port = m_Config.GetPort();
+//        m_VS.m_Port = m_Config.GetPhysicalPorts();
         return *this;
     }
 
