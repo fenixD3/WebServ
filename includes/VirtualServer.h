@@ -1,33 +1,34 @@
 #pragma once
 
 #include <vector>
+#include <string>
+#include <map>
 
-#include "ClientConnection.h"
-#include "config/IConfig.h"
-
+/*
 class VirtualServerBuilder;
+*/
 
 class VirtualServer
 {
 private:
-    std::string m_Port;
-    std::string m_HostIP;
     std::string m_ServerName;
-	std::map<std::string, std::string> m_Locations;
-    std::vector<ClientConnection> m_Connections;
+	size_t m_BodyLimit;
+	std::string m_ErrorPath;
+	std::map<std::string, std::string> m_routes;
 
 private:
-    VirtualServer() {}
+/*    friend class VirtualServerBuilder;*/
 
-    friend class VirtualServerBuilder;
 public:
-    void AddConnection(const ClientConnection& client_connection)
-    {
-        m_Connections.push_back(client_connection);
-    }
+	VirtualServer(const std::string& mServerName,
+				  size_t mBodyLimit,
+				  const std::string& mErrorPath,
+				  const std::map<std::string, std::string>& mRoutes);
+
+	void PrintServerName() const;
 };
 
-class VirtualServerBuilder
+/*class VirtualServerBuilder
 {
 private:
     VirtualServerBuilder(const IConfig& config)
@@ -67,4 +68,4 @@ public:
 //        m_VS.m_ServerName = m_Config.GetServerName();
         return *this;
     }
-};
+};*/

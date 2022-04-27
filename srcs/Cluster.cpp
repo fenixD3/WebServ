@@ -19,13 +19,13 @@ const size_t Cluster::ReadAndWriteSize = sizeof(Cluster::ReadWriteEvent) / sizeo
 Cluster::Cluster(const IConfig& conf)
 	: m_Config(conf)
 {
-    Init();
+	Init();
 }
 
 void Cluster::Run()
 {
     while(true)
-    {
+	{
         int poll_cnt = poll(m_Sockets.GetPdfs(), m_Sockets.GetPdfsSize(), POLL_TIMEOUT);
 
         if (poll_cnt == -1)
@@ -110,6 +110,10 @@ void Cluster::CreatePhysicalServer(addrinfo *hints, const std::string& port_numb
 		exit(1);
 	}
 
+	std::cout
+			<< "Host ip: "
+			<< GetPrintableIP(curr->ai_addr);
+
 	freeaddrinfo(results);
 
 	if (listen(listening_socket, LISTEN_BACKLOG) == -1)
@@ -119,13 +123,11 @@ void Cluster::CreatePhysicalServer(addrinfo *hints, const std::string& port_numb
 	}
 
 	std::cout
-		<< "Host ip: "
-		<< GetPrintableIP(curr->ai_addr)
 		<< ", listening socket: "
 		<< listening_socket
 		<< std::endl;
 
-	m_Servers.push_back(raii_ptr<PhysicalServer>(new PhysicalServer()));
+	m_Servers.push_back(raii_ptr<PhysicalServer>(new PhysicalServer(m_Config.GetServersByPort(port_number))));
 	m_Sockets.AddSocket(IOSocket(listening_socket, true, m_Servers.back().get()), Cluster::ReadEvent, ReadOrWriteSize);
 }
 
@@ -175,9 +177,13 @@ void Cluster::Receive(const IOSocket *event_socket, size_t socket_pdfs_idx)
 	 * \todo
 	 * чтение в цикле всего сообщения и прокидка его в PhysicalServer на парсинг и роутинг
 	 */
-	char rec_buf[512];
+	static const int MaxIp6Datagram = 65575;
+	char rec_buf[MaxIp6Datagram + 1];
+
 	int bytes_cnt = recv(event_socket->GetFd(), rec_buf, sizeof(rec_buf), 0);
-	if (bytes_cnt <=  0)
+	rec_buf[bytes_cnt] = '\0';
+
+	if (bytes_cnt <= 0)
 	{
 		if (bytes_cnt == 0)
 		{
@@ -193,6 +199,8 @@ void Cluster::Receive(const IOSocket *event_socket, size_t socket_pdfs_idx)
 	else
 	{
 		std::cout << rec_buf << std::endl;
+		std::string str_buf(rec_buf);
+		event_socket->GetServer()->ReadHeaders(str_buf);
 		/// Parse Request
 		/// Transfer to VirtualServer
 	}
