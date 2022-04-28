@@ -49,6 +49,7 @@ class HttpRequestBuilder
         const char* c_message_line = "/r/n/";
         const char* c_message_end = "/r/n/r/n";
 
+        // TODO make private map header
         class HttpRequest : public RequestHeader
         {
             private:
