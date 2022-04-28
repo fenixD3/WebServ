@@ -66,6 +66,11 @@ class HttpRequestBuilder
                     // TODO Add all headers tags
                     this->emplace("METHOD", ToString(http_method));
                 }
+                
+                std::vector<char>& GetBody() 
+                {
+                    return m_body;
+                }
         };
 
     public:
