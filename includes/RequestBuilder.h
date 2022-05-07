@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/28 23:05:52 by marvin            #+#    #+#             */
-/*   Updated: 2022/05/07 20:40:25 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/05/07 20:43:31 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ class HttpRequestBuilder
         HttpRequestBuilder(HttpRequestBuilder const&);
         void operator=(HttpRequestBuilder const&);
 
-        bool ParseInitial(HttpRequestBuilder::http_request& req, const std::string msg);
+        bool ParseInitialFields(HttpRequestBuilder::http_request& req, const std::string msg);
         std::string GetNext(const std::string& msg, size_t& cur);
         void GetQuery(HttpRequestBuilder::http_request& req);
         void ParseKey(std::string& key, const  std::string& line);

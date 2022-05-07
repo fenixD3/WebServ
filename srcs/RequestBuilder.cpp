@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/07 20:40:36 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/05/07 20:43:28 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ HttpRequestBuilder& HttpRequestBuilder::GetInstance()
     return m_instance;
 }
 
-bool HttpRequestBuilder::ParseInitial(HttpRequestBuilder::http_request& req, const std::string msg)
+bool HttpRequestBuilder::ParseInitialFields(HttpRequestBuilder::http_request& req, const std::string msg)
 {
 	size_t	i, j;
 	std::string	line;
@@ -128,7 +128,7 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequest(const std:
     bool is_valid = true;
     size_t cur_size = 0;
 
-    is_valid = ParseInitial(http_req, GetNext(msg, cur_size));
+    is_valid = ParseInitialFields(http_req, GetNext(msg, cur_size));
 
     while ((current = GetNext(msg, cur_size)) != "\r" && current != "" && is_valid)
 	{
