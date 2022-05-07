@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Request.h                                          :+:      :+:    :+:   */
+/*   RequestBuilder.h                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/28 23:05:52 by marvin            #+#    #+#             */
-/*   Updated: 2022/04/28 23:05:52 by marvin           ###   ########.fr       */
+/*   Updated: 2022/05/07 20:40:25 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,85 +14,37 @@
 #include <string>
 #include <map>
 #include <vector>
-
-enum HttpMethod
-{
-    GET,
-    POST,
-    DELETE,
-    //PUT,
-    OTHER
-};
-
-inline const char* ToString(HttpMethod value)
-{
-    switch (value)
-    {
-        case GET:       return "GET";
-        case POST:      return "POST";
-        case DELETE:    return "DELETE";
-        //case PUT:       return "PUT";
-        default:        return "OTHER";
-    }
-}
+#include <iostream>
+#include "HttpRequest.h"
 
 class HttpRequestBuilder
 {
+    friend class HttpRequest;
+
     private:
         typedef std::string type_tag;
         typedef std::string type_value;
-        typedef std::map<type_tag, type_value> RequestHeader;
-        typedef RequestHeader::iterator header_iterator;
 
         typedef HttpMethod e_http_method;
 
-        const char* c_message_line = "/r/n/";
-        const char* c_message_end = "/r/n/r/n";
-
-        // TODO make private map header
-        class HttpRequest : public RequestHeader
-        {
-            private:
-                size_t m_size;
-                std::vector<char> m_body; // maybe std::array due no dynamic change
-                
-            public:
-                HttpRequest(
-                    size_t size,
-                    std::vector<char>& body,
-                    e_http_method http_method)
-                : m_size(m_size)
-                , m_body(body)
-                {
-                    // TODO Add all headers tags
-                    this->emplace("METHOD", ToString(http_method));
-                }
-                
-                std::vector<char>& GetBody() 
-                {
-                    return m_body;
-                }
-        };
+        const char* c_message_line = "\r\n";
+        const char* c_message_end = "\r\n\r\n";
 
     public:
         typedef HttpRequest http_request;
 
-        const HttpRequestBuilder& GetInstance()
-        {
-            static HttpRequestBuilder m_instance;
-            return m_instance;
-        }
+        static HttpRequestBuilder& GetInstance();
 
-        http_request BuildHttpRequest(const char* raw_msg, size_t msg_size)
-        {
-            //http_request req;
-            //add additional tags parsing
-        }
+        HttpRequestBuilder::http_request BuildHttpRequest(const std::string msg);
 
     private:
-        HttpRequestBuilder();
+        HttpRequestBuilder(){};
         HttpRequestBuilder(HttpRequestBuilder const&);
         void operator=(HttpRequestBuilder const&);
 
-
+        bool ParseInitial(HttpRequestBuilder::http_request& req, const std::string msg);
+        std::string GetNext(const std::string& msg, size_t& cur);
+        void GetQuery(HttpRequestBuilder::http_request& req);
+        void ParseKey(std::string& key, const  std::string& line);
+        void ParseValue(std::string& key, const  std::string& line);
 };

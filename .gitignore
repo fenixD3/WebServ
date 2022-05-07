@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+.vscode/*
+webserv
+CMakeCache.txt
+cmake_install.cmake
+CMakeFiles/*
