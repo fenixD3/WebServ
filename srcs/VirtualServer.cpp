@@ -160,11 +160,3 @@ void VirtualServerBuilder::BuildAllRoutes()
 	}
 }
 
-
-bool Location::IsMethodAllowed(HttpMethod method) const {
-	return std::find(allowed_methods.begin(), allowed_methods.end(), method) != allowed_methods.end();
-}
-
-bool Location::IsUrlMatchLocation(std::string url) {
-	return url.rfind(pattern, 0) == 0;
-}
