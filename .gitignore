@@ -36,3 +36,5 @@ webserv
 CMakeCache.txt
 cmake_install.cmake
 CMakeFiles/*
+Makefile
+makefile.srcs
