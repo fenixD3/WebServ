@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 16:51:15 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/07 21:44:53 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/05/07 21:50:49 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,52 +52,52 @@ typedef std::map<std::string, std::string> RequestHeader;
 typedef RequestHeader::iterator header_iterator;
 
 class HttpRequest : private RequestHeader
-	{
+{
 	friend class HttpRequestBuilder;
 
-	private:
-		typedef HttpMethod e_http_method;
+private:
+	typedef HttpMethod e_http_method;
 
-		size_t m_size;
-		std::vector<char> m_body;
-		std::string m_path;
-		std::string m_query;
-		std::string m_version;
-		std::string m_method;
-		bool m_is_valid = false;
+	size_t m_size;
+	std::vector<char> m_body;
+	std::string m_path;
+	std::string m_query;
+	std::string m_version;
+	std::string m_method;
+	bool m_is_valid = false;
 
-	public:
-		std::string request_address;
+public:
+	std::string request_address;
 
-		HttpRequest();
+	HttpRequest();
 
-		std::vector<char>& GetBody() 
-		{
-			return m_body;
-		}
+	std::vector<char>& GetBody() 
+	{
+		return m_body;
+	}
 
-		std::string& GetPath()
-		{
-			return m_path;
-		};
+	std::string& GetPath()
+	{
+		return m_path;
+	};
 
-		std::string& GetVersion()
-		{
-			return m_version;
-		};
+	std::string& GetVersion()
+	{
+		return m_version;
+	};
 
-		std::string& GetMethod()
-		{
-			return m_method;
-		};
+	std::string& GetMethod()
+	{
+		return m_method;
+	};
 
-		std::string& GetQuery()
-		{
-			return m_query;
-		};
+	std::string& GetQuery()
+	{
+		return m_query;
+	};
 
-		bool IsValid()
-		{
-			return m_is_valid;
-		}
+	bool IsValid()
+	{
+		return m_is_valid;
+	}
 };
