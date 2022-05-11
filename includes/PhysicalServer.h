@@ -41,7 +41,7 @@ private:
 	ReceivingQueue m_PendingRequests;
 
 public:
-	std::deque<raii_ptr<VirtualServer>> m_VirtualServers;
+	std::deque<raii_ptr<VirtualServer> > m_VirtualServers;
 
 	PhysicalServer(const std::deque<VirtualServer*>& servers);
 

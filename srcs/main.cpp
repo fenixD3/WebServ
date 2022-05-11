@@ -1,15 +1,21 @@
 #include <iostream>
 
+#include "config/Config.h"
 #include "Cluster.h"
 
 int main(int ac, char **av)
 {
-    (void)av;
+	Config conf;
     if (ac < 2)
     {
-        std::cerr << "Using default configuration" << std::endl;
+        std::cout << "Using default configuration" << std::endl;
+		conf.SetFile(DefaultConfig);
     }
-	FakeConfig fk;
-    Cluster webserv(fk);
+	else
+	{
+		conf.SetFile(av[1]);
+	}
+	conf.Process();
+    Cluster webserv(conf);
     webserv.Run();
 }

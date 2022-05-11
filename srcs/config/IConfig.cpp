@@ -1,7 +1,7 @@
 #include "config/IConfig.h"
 #include "VirtualServer.h"
 
-FakeConfig::FakeConfig()
+/*FakeConfig::FakeConfig()
 {
 	m_PhysicalPorts = {
 			"8080",
@@ -31,4 +31,4 @@ const IConfig::physical_ports_cont& FakeConfig::GetPhysicalPorts() const
 const std::deque<VirtualServer*>& FakeConfig::GetServersByPort(const std::string& port) const
 {
 	return m_PortToVirtualServers.at(port);
-}
+}*/
