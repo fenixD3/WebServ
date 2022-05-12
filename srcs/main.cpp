@@ -5,16 +5,17 @@
 
 int main(int ac, char **av)
 {
-	Config conf;
+	std::string file_path;
     if (ac < 2)
     {
         std::cout << "Using default configuration" << std::endl;
-		conf.SetFile(DefaultConfig);
+		file_path = config::DefaultConfig;
     }
 	else
 	{
-		conf.SetFile(av[1]);
+		file_path = av[1];
 	}
+	config::Config conf(file_path);
 	conf.Process();
     Cluster webserv(conf);
     webserv.Run();
