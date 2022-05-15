@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/07 21:45:24 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/05/15 17:43:11 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,6 +145,20 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequest(const std:
 		current = msg.substr(cur_size, std::string::npos);
 		http_req.m_body = std::vector<char>(current.begin(), current.end());
 		GetQuery(http_req);
+	}
+
+	header_iterator itConLen = http_req.find("Content-Length");
+	if (itConLen == http_req.end())
+	{
+		is_valid = false;
+		std::cerr << "No Content-Length tag in header" << std::endl;
+	}
+	
+	header_iterator itTransferEncoding = http_req.find("Transfer-Encoding");
+	if (itTransferEncoding == http_req.end())
+	{
+		is_valid = false;
+		std::cerr << "No Transfer-Encoding tag in header" << std::endl;
 	}
 
 	http_req.m_is_valid = is_valid;

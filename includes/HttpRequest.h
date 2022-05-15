@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 16:51:15 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/07 21:50:49 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/05/15 17:54:30 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ inline const char* ToString(HttpMethod value)
 	}
 }
 
+
 inline HttpMethod ToHttpMethod(std::string value)
 {
 	if (value == "GET")
@@ -48,6 +49,30 @@ inline HttpMethod ToHttpMethod(std::string value)
 		return UNKNOWN;
 }
 
+enum TransferEncoding
+{
+	CHUNKED,
+	COMPRESS,
+	DEFLATE,
+	GZIP,
+	TDINVALID
+};
+
+inline TransferEncoding ToTransferEncoding(std::string value)
+{
+	if (value == "chunked")
+		return CHUNKED;
+	else if (value == "compress")
+		return COMPRESS;
+	else if (value == "deflate")
+		return DEFLATE;
+	else if (value == "gzip")
+		return GZIP;
+	else
+		return TDINVALID;
+}
+
+
 typedef std::map<std::string, std::string> RequestHeader;
 typedef RequestHeader::iterator header_iterator;
 
@@ -57,6 +82,7 @@ class HttpRequest : private RequestHeader
 
 private:
 	typedef HttpMethod e_http_method;
+	typedef TransferEncoding e_transfer_encoding;
 
 	size_t m_size;
 	std::vector<char> m_body;
@@ -99,5 +125,26 @@ public:
 	bool IsValid()
 	{
 		return m_is_valid;
-	}
+	};
+
+	std::string GetContentLength()
+	{
+		header_iterator it = this->find("Content-Length");
+		if (it == this->end())
+		{
+			return std::string("");
+		}
+		return it->second;
+	};
+
+	e_transfer_encoding GetTransferEncoding()
+	{
+		header_iterator it = this->find("Transfer-Encoding");
+		if (it == this->end())
+		{
+			return TDINVALID;
+		}
+		return ToTransferEncoding(it->second);
+	};
+
 };
