@@ -114,8 +114,9 @@ void Config::Process()
 		vs_builder.BuildAllRoutes();
 		m_PortToVirtualServers[port].push_back(vs_builder);
 
-		std::cout << "Virtual Server:" << std::endl << *m_PortToVirtualServers[port].back()
-				  << "On port: " << port << " and ip: " << m_PhysicalPortsToIp[port] << std::endl << std::string(100, '-') << std::endl;
+		/// Test output
+		/*std::cout << "Virtual Server:" << std::endl << *m_PortToVirtualServers[port].back()
+				  << "On port: " << port << " and ip: " << m_PhysicalPortsToIp[port] << std::endl << std::string(100, '-') << std::endl;*/
 
 		block_instructions.clear();
 	}

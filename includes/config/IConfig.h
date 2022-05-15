@@ -18,6 +18,7 @@ public:
 	virtual const std::deque<VirtualServer*>& GetServersByPort(const std::string& port) const = 0;
 };
 
+/// Test output
 /*class FakeConfig : public IConfig
 {
 private:

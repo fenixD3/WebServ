@@ -29,7 +29,8 @@ private:
 public:
 	VirtualServer();
 
-	friend std::ostream& operator<<(std::ostream& out, const VirtualServer& vs)
+	/// Test output
+	/*friend std::ostream& operator<<(std::ostream& out, const VirtualServer& vs)
 	{
 		out << "Server name: " << vs.m_ServerName << ", Body Limit: " << vs.m_BodyLimit << std::endl;
 		for (auto& [uri, props] : vs.m_UriToProperties)
@@ -60,7 +61,7 @@ public:
 			out << name <<" has route: " << route << std::endl;
 		}
 		return out;
-	}
+	}*/
 };
 
 struct LocationNames
