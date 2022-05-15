@@ -1,5 +1,11 @@
 #include "PhysicalServer.h"
 
+PhysicalServer::ReceivingQueue::ReceivingMsg::ReceivingMsg()
+	: header_filled(false)
+	, is_finished(false)
+	, is_chunked(false)
+{}
+
 PhysicalServer::PhysicalServer(const std::deque<VirtualServer*>& servers)
 {
 	for (size_t i = 0; i < servers.size(); ++i)

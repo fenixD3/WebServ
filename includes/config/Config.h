@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IConfig.h"
+#include "VirtualServer.h"
 
 #include <fstream>
 
@@ -23,47 +24,42 @@ private:
 
 	static std::deque<std::string> GetAvailableBlock();
 
-	std::fstream& m_ConfigFile;
+	std::fstream m_ConfigFile;
 
 public:
-	BlockExtractor(std::fstream& file);
+	BlockExtractor(const std::string& file_path);
+
+	virtual ~BlockExtractor();
 
 	bool TryExtract(std::map<std::string, std::deque<std::string> >& out_block_content);
-};
 
-/*class InstructionExtractor
-{
 private:
-//	static const char InstructionEndPattern = ';';
-
-	std::fstream& m_ConfigFile;
-
-public:
-	InstructionExtractor(std::ifstream& file);
-};*/
+	std::string ExtractBlockName();
+};
 
 class Config : public IConfig
 {
 private:
-	std::fstream m_ConfigFile;
 	BlockExtractor m_BlockExtractor;
 
-	physical_ports_cont m_PhysicalPorts;
+	physical_ports_ip_cont m_PhysicalPortsToIp;
 	std::map<std::string, std::deque<VirtualServer*> > m_PortToVirtualServers; /// The first server in deque mut be a default
 
 public:
 	Config(const std::string& file_path);
-	~Config();
 
-	void Process() override;
+	virtual void Process();
 
-	const physical_ports_cont& GetPhysicalPorts() const override;
-	const std::deque<VirtualServer*>& GetServersByPort(const std::string& port) const override;
+	virtual const physical_ports_ip_cont& GetPhysicalEndpoints() const;
+	virtual const std::deque<VirtualServer*>& GetServersByPort(const std::string& port) const;
+
+private:
+	std::string ParseServer(const std::deque<std::string>& block_instructions, VirtualServerBuilder& vs_builder);
+	void ParseLocations(const std::deque<std::string>& block_instructions, VirtualServerBuilder& vs_builder);
 };
 
 std::string ExtractLogicPart(std::istream& where_extract, const char delimiter = '\n');
 void Trim(std::string& out_line);
-void DeleteComment(std::string& out_line);
 
 }
 

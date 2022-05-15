@@ -42,7 +42,7 @@ private:
 	void Send(const IOSocket *event_socket, size_t socket_pdfs_idx);
 
     void Init();
-	void CreatePhysicalServer(addrinfo *hints, const std::string& port_number);
+	void CreatePhysicalServer(addrinfo *hints, const std::string& ip_number, const std::string& port_number);
 
     void *GetInputAddr(sockaddr *sa) const;
     std::string GetPrintableIP(sockaddr *addr_info) const;

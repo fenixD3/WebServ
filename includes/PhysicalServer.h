@@ -9,17 +9,17 @@
 class PhysicalServer
 {
 private:
-
-
 	class ReceivingQueue
 	{
 	private:
 		struct ReceivingMsg
 		{
 			std::string msg;
-			bool header_filled = false;
-			bool is_finished = false;
-			bool is_chunked = false;
+			bool header_filled;
+			bool is_finished;
+			bool is_chunked;
+
+			ReceivingMsg();
 		};
 
 		std::queue<ReceivingMsg> m_Queue;

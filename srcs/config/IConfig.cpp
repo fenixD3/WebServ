@@ -3,7 +3,7 @@
 
 /*FakeConfig::FakeConfig()
 {
-	m_PhysicalPorts = {
+	m_PhysicalPortsToIp = {
 			"8080",
 			"8181"
 	};
@@ -23,9 +23,9 @@
 	};
 }
 
-const IConfig::physical_ports_cont& FakeConfig::GetPhysicalPorts() const
+const IConfig::physical_ports_ip_cont& FakeConfig::GetPhysicalEndpoints() const
 {
-	return m_PhysicalPorts;
+	return m_PhysicalPortsToIp;
 }
 
 const std::deque<VirtualServer*>& FakeConfig::GetServersByPort(const std::string& port) const

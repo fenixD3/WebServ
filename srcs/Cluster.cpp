@@ -62,18 +62,18 @@ void Cluster::Init()
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE; /// use my IP address as host. Write INADDR_ANY to IP address
 
-	const IConfig::physical_ports_cont& physical_ports = m_Config.GetPhysicalPorts();
-	for (IConfig::physical_ports_cont::const_iterator it = physical_ports.begin(); it != physical_ports.end(); ++it)
+	const IConfig::physical_ports_ip_cont& physical_endpoints = m_Config.GetPhysicalEndpoints();
+	for (IConfig::physical_ports_ip_cont::const_iterator it = physical_endpoints.begin(); it != physical_endpoints.end(); ++it)
 	{
-		CreatePhysicalServer(&hints, *it);
+		CreatePhysicalServer(&hints, it->second, it->first);
 	}
 }
 
-void Cluster::CreatePhysicalServer(addrinfo *hints, const std::string& port_number)
+void Cluster::CreatePhysicalServer(addrinfo *hints, const std::string& ip_number, const std::string& port_number)
 {
 	addrinfo *results;
 	int rv;
-	if ((rv = getaddrinfo(NULL, port_number.c_str(), hints, &results)) != 0)
+	if ((rv = getaddrinfo((ip_number.empty()) ? NULL : ip_number.c_str(), port_number.c_str(), hints, &results)) != 0)
 	{
 		std::cerr << "Getaddrinfo error: " << gai_strerror(rv) << std::endl;
 		exit(1);
@@ -198,7 +198,6 @@ void Cluster::Receive(const IOSocket *event_socket, size_t socket_pdfs_idx)
 	}
 	else
 	{
-		std::cout << rec_buf << std::endl;
 		std::string str_buf(rec_buf);
 		event_socket->GetServer()->ReadHeaders(str_buf);
 		/// Parse Request
@@ -206,7 +205,7 @@ void Cluster::Receive(const IOSocket *event_socket, size_t socket_pdfs_idx)
 	}
 }
 
-void Cluster::Send(const IOSocket *event_socket, size_t /*socket_pdfs_idx*/)
+void Cluster::Send(const IOSocket */*event_socket*/, size_t /*socket_pdfs_idx*/)
 {
 	/**
 	 * \todo

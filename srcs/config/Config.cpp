@@ -1,6 +1,8 @@
 #include "config/Config.h"
+#include "VirtualServer.h"
 
 #include <iostream>
+#include <sstream>
 
 namespace config
 {
@@ -15,32 +17,27 @@ std::deque<std::string> BlockExtractor::GetAvailableBlock()
 	return available_blocks;
 }
 
-BlockExtractor::BlockExtractor(std::fstream& file)
-	: m_ConfigFile(file)
-{}
+BlockExtractor::BlockExtractor(const std::string& file_path)
+	: m_ConfigFile(file_path)
+{
+	if (!m_ConfigFile.is_open())
+	{
+		std::cerr << "Config file doesn't exist" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+}
+
+BlockExtractor::~BlockExtractor()
+{
+	m_ConfigFile.close();
+}
 
 bool BlockExtractor::TryExtract(std::map<std::string, std::deque<std::string> >& out_block_content)
 {
-	std::string block_name;
-	while (m_ConfigFile)
+	std::string block_name = ExtractBlockName();
+	if (block_name.empty())
 	{
-		block_name = ExtractLogicPart(m_ConfigFile);
-		if (block_name.empty())
-		{
-			continue;
-		}
-		if (block_name.find(BlockExtractor::BlockStartPattern) == std::string::npos)
-		{
-			std::cerr << "Block " << block_name << " has wrong syntax" << std::endl;
-			exit(EXIT_FAILURE);
-		}
-		block_name.erase(block_name.find_first_of(SpacePattern));
-		if (std::find(BlockExtractor::AvailableBlock.begin(), BlockExtractor::AvailableBlock.end(), block_name) == BlockExtractor::AvailableBlock.end())
-		{
-			std::cerr << "Block " << block_name << " isn't available" << std::endl;
-			exit(EXIT_FAILURE);
-		}
-		break;
+		return false;
 	}
 
 	for (std::string line; m_ConfigFile;)
@@ -73,53 +70,196 @@ bool BlockExtractor::TryExtract(std::map<std::string, std::deque<std::string> >&
 		out_block_content[block_name].push_back(line.erase(instruction_end));
 	}
 
-	if (!m_ConfigFile)
-	{
-		return false;
-	}
 	return true;
 }
 
-Config::Config(const std::string& file_path)
-	: m_ConfigFile(file_path)
-	, m_BlockExtractor(m_ConfigFile)
+std::string BlockExtractor::ExtractBlockName()
 {
-	if (!m_ConfigFile.is_open())
+	std::string block_name;
+	while (m_ConfigFile)
 	{
-		std::cerr << "Config file doesn't exist" << std::endl;
-		exit(EXIT_FAILURE);
+		block_name = ExtractLogicPart(m_ConfigFile);
+		if (block_name.empty())
+		{
+			continue;
+		}
+		if (block_name.find(BlockExtractor::BlockStartPattern) == std::string::npos)
+		{
+			std::cerr << "Block " << block_name << " has wrong syntax" << std::endl;
+			exit(EXIT_FAILURE);
+		}
+		block_name.erase(block_name.find_first_of(SpacePattern));
+		if (std::find(BlockExtractor::AvailableBlock.begin(), BlockExtractor::AvailableBlock.end(), block_name) == BlockExtractor::AvailableBlock.end())
+		{
+			std::cerr << "Block " << block_name << " isn't available" << std::endl;
+			exit(EXIT_FAILURE);
+		}
+		break;
 	}
+	return block_name;
 }
+
+Config::Config(const std::string& file_path)
+	: m_BlockExtractor(file_path)
+{}
 
 void Config::Process()
 {
 	std::map<std::string, std::deque<std::string> > block_instructions;
 	while (m_BlockExtractor.TryExtract(block_instructions))
 	{
-		for (auto& [name, value] : block_instructions)
-		{
-			std::cout << name << std::endl;
-			for (auto& i : value)
-				std::cout << i << std::endl;
-		}
+		VirtualServerBuilder vs_builder;
+		std::string port = ParseServer(block_instructions["server"], vs_builder);
+		ParseLocations(block_instructions["location"], vs_builder);
+		vs_builder.BuildAllRoutes();
+		m_PortToVirtualServers[port].push_back(vs_builder);
+
+		std::cout << "Virtual Server:" << std::endl << *m_PortToVirtualServers[port].back()
+				  << "On port: " << port << " and ip: " << m_PhysicalPortsToIp[port] << std::endl << std::string(100, '-') << std::endl;
+
 		block_instructions.clear();
-		std::cout << std::endl;
 	}
 }
 
-const IConfig::physical_ports_cont& Config::GetPhysicalPorts() const
+std::string Config::ParseServer(const std::deque<std::string>& block_instructions, VirtualServerBuilder& vs_builder)
 {
-	return m_PhysicalPorts;
+	std::string port;
+	for (size_t i = 0; i < block_instructions.size(); ++i)
+	{
+		std::istringstream instruction(block_instructions[i]);
+		std::string name;
+		instruction >> name;
+		if (name == "listen")
+		{
+			std::string value, ip;
+			instruction >> value;
+			size_t delim_pos = value.find(':');
+			if (delim_pos != std::string::npos)
+			{
+				ip = value.substr(0, delim_pos);
+				port = value.substr(delim_pos + 1);
+			}
+			else
+			{
+				port = value;
+			}
+			if (m_PhysicalPortsToIp.count(port) && m_PhysicalPortsToIp[port] != ip)
+			{
+				std::cerr << "Ip has been already existed for port " << port <<std::endl;
+				exit(EXIT_FAILURE);
+			}
+			m_PhysicalPortsToIp[port] = ip;
+		}
+		else if (name == "server_name")
+		{
+			std::string serv_name;
+			instruction >> serv_name;
+			if (serv_name == "_")
+			{
+				serv_name = "";
+			}
+			vs_builder.AddServerName(serv_name);
+		}
+		else if (name == "client_max_body_size")
+		{
+			size_t limit = 0;
+			instruction >> limit;
+			vs_builder.AddBodyLimit(limit);
+		}
+		else if (name == "root")
+		{
+			std::string root;
+			instruction >> root;
+			if (root.empty())
+			{
+				std::cerr << "Root must be at server block" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+			vs_builder.AddRoot(root);
+		}
+		else if (name == "index")
+		{
+			std::string index_page;
+			instruction >> index_page;
+			if (index_page.empty())
+			{
+				std::cerr << "Index must has a value" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+			vs_builder.AddIndex(index_page);
+		}
+		else if (name == "error_page")
+		{
+			std::string error_code, error_page;
+			instruction >> error_code >> error_page;
+			if (error_code.empty() || error_page.empty())
+			{
+				std::cerr << "Error page must contain an error_code and path to the pahe" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+			vs_builder.AddError(error_code, error_page);
+		}
+		else if (name == "cgi_path")
+		{
+			std::string cgi_path;
+			instruction >> cgi_path;
+			if (cgi_path.empty())
+			{
+				std::cerr << "Cgi path must has a value" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+			vs_builder.AddCgi(cgi_path);
+		}
+		else if (name == "upload")
+		{
+			std::string upload_path;
+			instruction >> upload_path;
+			if (upload_path.empty())
+			{
+				std::cerr << "Upload must has a value" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+			vs_builder.AddUpload(upload_path);
+		}
+	}
+	return port;
+}
+
+void Config::ParseLocations(const std::deque<std::string>& block_instructions, VirtualServerBuilder& vs_builder)
+{
+	std::string uri_value;
+	{
+		std::string uri;
+		std::istringstream instruction(block_instructions[0]);
+		instruction >> uri >> uri_value;
+		if (uri != "uri")
+		{
+			std::cerr << "Uri must has at the first place in location block" << std::endl;
+			exit(EXIT_FAILURE);
+		}
+	}
+	for (size_t i = 1; i < block_instructions.size(); ++i)
+	{
+		std::istringstream instruction(block_instructions[i]);
+		std::string name, value;
+		instruction >> name >> value;
+		if (name == "uri")
+		{
+			uri_value = value;
+			continue;
+		}
+		vs_builder.AddUriProperty(uri_value, name, value);
+	}
+}
+
+const IConfig::physical_ports_ip_cont& Config::GetPhysicalEndpoints() const
+{
+	return m_PhysicalPortsToIp;
 }
 
 const std::deque<VirtualServer*>& Config::GetServersByPort(const std::string& port) const
 {
 	return m_PortToVirtualServers.at(port);
-}
-
-Config::~Config()
-{
-	m_ConfigFile.close();
 }
 
 std::string ExtractLogicPart(std::istream& where_extract, const char delimiter)
@@ -141,15 +281,5 @@ void Trim(std::string& out_line)
 		out_line.erase(trimmed_end + 1);
 	}
 }
-
-//void DeleteComment(std::string& out_line)
-//{
-//	size_t comment_start = out_line.find(BlockExtractor::CommentPattern);
-//	if (comment_start != std::string::npos)
-//	{
-//		size_t comment_end = out_line.find('\n', comment_start);
-//		out_line.erase(comment_start, )
-//	}
-//}
 
 }
