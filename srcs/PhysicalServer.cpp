@@ -26,6 +26,12 @@ void PhysicalServer::ReadHeaders(std::string& recv_buffer)
 				current_msg.header_filled = true;
 			}
 		}
+		else
+		{
+			HttpRequestBuilder::http_request uncooked_req =
+				HttpRequestBuilder::GetInstance().BuildHttpRequestHeader(recv_buffer);
+			current_msg.http_request = &uncooked_req;
+		}
 	}
 }
 

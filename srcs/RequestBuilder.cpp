@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/15 17:43:11 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/05/18 21:37:11 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,13 @@ void HttpRequestBuilder::ParseValue(std::string& value, const std::string& line)
 		value.append(line, i, std::string::npos);
 }
 
-HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequest(const std::string msg)
+std::string HttpRequestBuilder::MakeHeaderForCGI(std::string& key)
+{
+	std::transform(key.begin(), key.end(), key.begin(), CGIFormatter);
+	return "HTTP_" + key;
+}
+
+HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(const std::string& msg)
 {
 	HttpRequestBuilder::http_request http_req;
 	std::string current;
@@ -134,34 +140,55 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequest(const std:
 	{
 		ParseKey(key, current);
 		ParseValue(value, current);
-		if (http_req.count(key))
-				http_req[key] = value;
-		//if (key.find("Secret") != std::string::npos)
-			//TODO CGI
-	}
-
-	if (is_valid)
-	{
-		current = msg.substr(cur_size, std::string::npos);
-		http_req.m_body = std::vector<char>(current.begin(), current.end());
-		GetQuery(http_req);
-	}
-
-	header_iterator itConLen = http_req.find("Content-Length");
-	if (itConLen == http_req.end())
-	{
-		is_valid = false;
-		std::cerr << "No Content-Length tag in header" << std::endl;
+		if (key.find("Secret") != std::string::npos)
+			http_req.m_cgi_env[MakeHeaderForCGI(key)] = value;
+		else
+		{
+			http_req[key] = value;
+		}
 	}
 	
+	header_iterator itWWWAuth = http_req.find("Www-Authenticate");
+	if (itWWWAuth != http_req.end())
+	{
+		http_req.m_cgi_env["Www-Authenticate"] = itWWWAuth->second;
+	}
+
+	// Если нет Transfer-Encoding , то Content-Length должен быть, если тело запроса ненулевое
+	// Если нет Transfer-Encoding , но Content-Length отсутствует, то тело запроса нулевое (вроде так, монжно перепроверить, правда ли Content-Length может не быть в этом случае)
+	// Если есть Transfer-Encoding: chunked, то на Content-Length вообще пофиг (его и не должно там быть). Тогда там свой паттерн нахождение конца тела '0\r\n\r\n'
+	// Для других Transfer-Encoding не нашел инфы
 	header_iterator itTransferEncoding = http_req.find("Transfer-Encoding");
 	if (itTransferEncoding == http_req.end())
 	{
-		is_valid = false;
-		std::cerr << "No Transfer-Encoding tag in header" << std::endl;
+		header_iterator itConLen = http_req.find("Content-Length");
+		if (itConLen == http_req.end())
+		{
+			http_req.m_body_size = 0;
+		}
+		else
+		{
+			http_req.m_body_size = std::stoi(itConLen->second);
+		}
+	}
+	else
+	{
+		http_req.m_transfer_encoding_status = ToTransferEncoding(itTransferEncoding->second);
 	}
 
 	http_req.m_is_valid = is_valid;
-	http_req.m_size = msg.size();
+	http_req.m_header_size = cur_size;
 	return http_req;
+}
+
+void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& http_req, const std::string& msg)
+{
+	std::string current;
+
+	if (http_req.m_is_valid)
+	{
+		current = msg.substr(http_req.m_header_size, std::string::npos);
+		http_req.m_body = std::vector<char>(current.begin(), current.end());
+		GetQuery(http_req);
+	}
 }

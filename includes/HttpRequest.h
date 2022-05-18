@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 16:51:15 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/15 17:54:30 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/05/18 21:36:48 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ enum TransferEncoding
 	COMPRESS,
 	DEFLATE,
 	GZIP,
-	TDINVALID
+	STATIC
 };
 
 inline TransferEncoding ToTransferEncoding(std::string value)
@@ -69,12 +69,14 @@ inline TransferEncoding ToTransferEncoding(std::string value)
 	else if (value == "gzip")
 		return GZIP;
 	else
-		return TDINVALID;
+		return STATIC;
 }
 
 
 typedef std::map<std::string, std::string> RequestHeader;
 typedef RequestHeader::iterator header_iterator;
+typedef std::map<std::string, std::string> CGIEnvironment;
+typedef RequestHeader::iterator cgi_iterator;
 
 class HttpRequest : private RequestHeader
 {
@@ -83,8 +85,12 @@ class HttpRequest : private RequestHeader
 private:
 	typedef HttpMethod e_http_method;
 	typedef TransferEncoding e_transfer_encoding;
+	typedef CGIEnvironment t_cgi_environment;
 
-	size_t m_size;
+	t_cgi_environment m_cgi_env;
+	e_transfer_encoding m_transfer_encoding_status = e_transfer_encoding::STATIC;
+	size_t m_header_size;
+	size_t m_body_size;
 	std::vector<char> m_body;
 	std::string m_path;
 	std::string m_query;
@@ -127,24 +133,14 @@ public:
 		return m_is_valid;
 	};
 
-	std::string GetContentLength()
+	int GetContentLength()
 	{
-		header_iterator it = this->find("Content-Length");
-		if (it == this->end())
-		{
-			return std::string("");
-		}
-		return it->second;
+		return m_body_size;
 	};
 
 	e_transfer_encoding GetTransferEncoding()
 	{
-		header_iterator it = this->find("Transfer-Encoding");
-		if (it == this->end())
-		{
-			return TDINVALID;
-		}
-		return ToTransferEncoding(it->second);
+		return m_transfer_encoding_status;
 	};
 
 };

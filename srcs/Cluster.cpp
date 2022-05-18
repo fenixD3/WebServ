@@ -200,11 +200,11 @@ void Cluster::Receive(const IOSocket *event_socket, size_t socket_pdfs_idx)
 	{
 		std::cout << rec_buf << std::endl;
 
+		/// Parse Request Headers
 		std::string str_buf(rec_buf);
 		event_socket->GetServer()->ReadHeaders(str_buf);
-		/// Parse Request
-		HttpRequestBuilder::http_request req =
-			HttpRequestBuilder::GetInstance().BuildHttpRequest(str_buf);
+		/// Parse Body
+
 		/// Transfer to VirtualServer
 	}
 }

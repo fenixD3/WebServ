@@ -3,7 +3,9 @@
 #include <deque>
 #include <queue>
 
+#include "RequestBuilder.h"
 #include "VirtualServer.h"
+#include "HttpRequest.h"
 #include "raii_ptr.h"
 
 class PhysicalServer
@@ -20,6 +22,7 @@ private:
 			bool header_filled = false;
 			bool is_finished = false;
 			bool is_chunked = false;
+			HttpRequest* http_request = nullptr; // можно сделать raii_pointer
 		};
 
 		std::queue<ReceivingMsg> m_Queue;
