@@ -199,9 +199,12 @@ void Cluster::Receive(const IOSocket *event_socket, size_t socket_pdfs_idx)
 	else
 	{
 		std::cout << rec_buf << std::endl;
+
+		/// Parse Request Headers
 		std::string str_buf(rec_buf);
 		event_socket->GetServer()->ReadHeaders(str_buf);
-		/// Parse Request
+		/// Parse Body
+
 		/// Transfer to VirtualServer
 	}
 }
