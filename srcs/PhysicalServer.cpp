@@ -21,10 +21,13 @@ void PhysicalServer::ReadHeaders(std::string& recv_buffer)
 	}
 	for (size_t i = 0; i < m_PendingRequests.Size() || m_PendingRequests[i].header_filled; ++i)
 	{
-		HttpRequestBuilder::http_request uncooked_req =
-			HttpRequestBuilder::GetInstance().BuildHttpRequestHeader(m_PendingRequests[i].msg);
-		m_PendingRequests[i].http_request = &uncooked_req;
-		m_PendingRequests[i].body_size_for_read = uncooked_req.GetContentLength();
+		if (m_PendingRequests[i].http_request == nullptr)
+		{
+			HttpRequestBuilder::http_request uncooked_req =
+				HttpRequestBuilder::GetInstance().BuildHttpRequestHeader(m_PendingRequests[i].msg);
+			m_PendingRequests[i].http_request = &uncooked_req;
+			m_PendingRequests[i].body_size_for_read = uncooked_req.GetContentLength();
+		}
 	}
 }
 
@@ -32,7 +35,7 @@ void PhysicalServer::ReadBody(std::string& recv_buffer)
 {
 	for (size_t i = 0; !recv_buffer.empty() || i < m_PendingRequests.Size(); ++i)
 	{
-		if (m_PendingRequests[i].header_filled || m_PendingRequests[i].is_finished)
+		if (!m_PendingRequests[i].header_filled || m_PendingRequests[i].is_finished)
 		{
 			continue;
 		}
@@ -40,7 +43,7 @@ void PhysicalServer::ReadBody(std::string& recv_buffer)
 		HttpRequest *http_req = m_PendingRequests[i].http_request;
 		TransferEncoding encoding_type = http_req->GetTransferEncoding();
 		bool has_been_filled;
-		if (encoding_type != TransferEncoding::CHUNKED)
+		if (encoding_type == TransferEncoding::CHUNKED)
 		{
 			has_been_filled = FillRequestMsg(m_PendingRequests[i], recv_buffer, CHUNKED_BODY);
 		}
@@ -52,6 +55,7 @@ void PhysicalServer::ReadBody(std::string& recv_buffer)
 		if (has_been_filled)
 		{
 			m_PendingRequests[i].is_finished = true;
+			HttpRequestBuilder::GetInstance().BuildHttpRequestBody(*m_PendingRequests[i].http_request, m_PendingRequests[i].msg);
 		}
 	}
 }

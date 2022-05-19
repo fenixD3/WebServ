@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/18 21:37:11 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/05/19 21:15:51 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,12 +33,12 @@ bool HttpRequestBuilder::ParseInitialFields(HttpRequestBuilder::http_request& re
 		std::cerr << "RFL no space after method" << std::endl;
 		return false;
 	}
-	if (ToHttpMethod(line) == UNKNOWN)
+	req.m_method.assign(line, 0, i);
+	if (ToHttpMethod(req.m_method) == UNKNOWN)
 	{
 		std::cerr << "Invalid method requested" << std::endl;
 		return false;
 	}
-	req.m_method.assign(line, 0, i);
 
 	// PATH
 	if ((j = line.find_first_not_of(' ', i)) == std::string::npos)
@@ -133,6 +133,7 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(cons
 	std::string value;
 	bool is_valid = true;
 	size_t cur_size = 0;
+	std::cerr << "Start building request" << std::endl;
 
 	is_valid = ParseInitialFields(http_req, GetNext(msg, cur_size));
 
@@ -180,6 +181,7 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(cons
 
 	http_req.m_is_valid = is_valid;
 	http_req.m_header_size = cur_size;
+	std::cerr << "Read request header with validity status: " + std::to_string(http_req.m_is_valid)  << std::endl;
 	return http_req;
 }
 
@@ -191,6 +193,7 @@ void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& 
 	{
 		current = msg.substr(http_req.m_header_size, std::string::npos);
 		http_req.m_body = std::vector<char>(current.begin(), current.end());
+		std::cerr << "Read request body with size: " << std::to_string(http_req.m_body.size())  << std::endl;
 		GetQuery(http_req);
 	}
 }
