@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/19 21:15:51 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/05/19 21:53:12 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,6 +139,8 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(cons
 
 	while ((current = GetNext(msg, cur_size)) != "\r" && current != "" && is_valid)
 	{
+		key = "";
+		value = "";
 		ParseKey(key, current);
 		ParseValue(value, current);
 		if (key.find("Secret") != std::string::npos)
@@ -182,6 +184,7 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(cons
 	http_req.m_is_valid = is_valid;
 	http_req.m_header_size = cur_size;
 	std::cerr << "Read request header with validity status: " + std::to_string(http_req.m_is_valid)  << std::endl;
+	std::cerr << http_req.ToString() << std::endl;
 	return http_req;
 }
 
