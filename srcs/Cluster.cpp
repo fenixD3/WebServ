@@ -41,11 +41,16 @@ void Cluster::Run()
 			{
 				continue;
 			}
-//			for (size_t handler_idx = 0; handler_idx < event.handlers.size(); ++handler_idx)
-//			{
-//				(this->*(event.handlers[handler_idx]))(event.socket, i);
-//			}
-			(this->*(event.handler))(event.socket, i);
+			for (size_t handler_idx = 0; handler_idx < event.handlers.size(); ++handler_idx)
+			{
+				(this->*(event.handlers[handler_idx]))(event.socket);
+				if (event.socket->IsClientSideClosed())
+				{
+					close(event.socket->GetFd());
+					m_Sockets.DelSocket(event.socket, i);
+					break;
+				}
+			}
             ++visited;
             if (static_cast<int>(visited) == poll_cnt)
             {
@@ -147,7 +152,7 @@ void *Cluster::GetInputAddr(sockaddr *sa) const
     return &(reinterpret_cast<sockaddr_in6*>(sa)->sin6_addr);
 }
 
-void Cluster::Accept(const IOSocket *event_socket, size_t /*socket_pdfs_idx*/) /// Почему от одного клиента приходит 2 соединения (браузер)
+void Cluster::Accept(IOSocket *event_socket) /// Почему от одного клиента приходит 2 соединения (браузер)
 {
 	sockaddr_storage connecting_address = {};
 	socklen_t storage_size = sizeof(connecting_address);
@@ -171,7 +176,7 @@ void Cluster::Accept(const IOSocket *event_socket, size_t /*socket_pdfs_idx*/) /
 	}
 }
 
-void Cluster::Receive(const IOSocket *event_socket, size_t socket_pdfs_idx)
+void Cluster::Receive(IOSocket *event_socket)
 {
 	/**
 	 * \todo
@@ -193,22 +198,20 @@ void Cluster::Receive(const IOSocket *event_socket, size_t socket_pdfs_idx)
 		{
 			std::cerr << "recv: " << strerror(errno) << std::endl;; /// maybe forbidden due subject /// появлялось recv: Connection reset by peer. Видимо пытался писать в закрытый сокет (надо протестить)
 		}
-		close(event_socket->GetFd());
-		m_Sockets.DelSocket(event_socket, socket_pdfs_idx);
+		event_socket->SetClientSideClosing(true);
 	}
 	else
 	{
-		std::cout << rec_buf << std::endl;
-
 		/// Parse Request Headers
 		std::string str_buf(rec_buf);
 		event_socket->GetServer()->ReadHeaders(str_buf);
 		event_socket->GetServer()->ReadBody(str_buf);
 		/// Transfer to VirtualServer
 	}
+	event_socket->SetClientSideClosing(true);
 }
 
-void Cluster::Send(const IOSocket *event_socket, size_t /*socket_pdfs_idx*/)
+void Cluster::Send(IOSocket *event_socket)
 {
 	/**
 	 * \todo
