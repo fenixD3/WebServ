@@ -161,6 +161,7 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(cons
 	header_iterator itTransferEncoding = http_req.find("Transfer-Encoding");
 	if (itTransferEncoding == http_req.end())
 	{
+		const size_t last_sequence_size = 2; /// For the last \r\n
 		header_iterator itConLen = http_req.find("Content-Length");
 		if (itConLen == http_req.end())
 		{
@@ -170,6 +171,7 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(cons
 		{
 			http_req.m_body_size = std::stoi(itConLen->second);
 		}
+		http_req.m_body_size += last_sequence_size;
 	}
 	else
 	{

@@ -10,83 +10,101 @@ PhysicalServer::PhysicalServer(const std::deque<VirtualServer*>& servers)
 
 void PhysicalServer::ReadHeaders(std::string& recv_buffer)
 {
-	const std::string EndPattern = "\r\n\r\n";
-
 	while (!recv_buffer.empty())
 	{
-		size_t end_pos = recv_buffer.find(EndPattern);
-		ReceivingQueue::receiving_msg_type& current_msg = m_PendingRequests.GetLastNotFilled();
-
-		if (!current_msg.header_filled)
+		ReceivingQueue::receiving_msg_type& filling_req = m_PendingRequests.GetLastNotFilledHeader();
+		bool has_been_filled = FillRequestMsg(filling_req, recv_buffer, HEADER);
+		if (has_been_filled)
 		{
-			current_msg.msg += recv_buffer.substr(0, end_pos + EndPattern.size());
-			recv_buffer.erase(0, end_pos + EndPattern.size());
-			if (end_pos != std::string::npos)
-			{
-				current_msg.header_filled = true;
-			}
+			filling_req.header_filled = true;
+		}
+	}
+	for (size_t i = 0; i < m_PendingRequests.Size() || m_PendingRequests[i].header_filled; ++i)
+	{
+		HttpRequestBuilder::http_request uncooked_req =
+			HttpRequestBuilder::GetInstance().BuildHttpRequestHeader(m_PendingRequests[i].msg);
+		m_PendingRequests[i].http_request = &uncooked_req;
+		m_PendingRequests[i].body_size_for_read = uncooked_req.GetContentLength();
+	}
+}
+
+void PhysicalServer::ReadBody(std::string& recv_buffer)
+{
+	for (size_t i = 0; !recv_buffer.empty() || i < m_PendingRequests.Size(); ++i)
+	{
+		if (m_PendingRequests[i].header_filled || m_PendingRequests[i].is_finished)
+		{
+			continue;
+		}
+
+		HttpRequest *http_req = m_PendingRequests[i].http_request;
+		TransferEncoding encoding_type = http_req->GetTransferEncoding();
+		bool has_been_filled;
+		if (encoding_type != TransferEncoding::CHUNKED)
+		{
+			has_been_filled = FillRequestMsg(m_PendingRequests[i], recv_buffer, CHUNKED_BODY);
 		}
 		else
 		{
-			HttpRequestBuilder::http_request uncooked_req =
-				HttpRequestBuilder::GetInstance().BuildHttpRequestHeader(recv_buffer);
-			current_msg.http_request = &uncooked_req;
+			has_been_filled = FillRequestMsg(m_PendingRequests[i], recv_buffer, SIMPLE_BODY);
+		}
+
+		if (has_been_filled)
+		{
+			m_PendingRequests[i].is_finished = true;
 		}
 	}
 }
 
-/*void PhysicalServer::ReadFullMessage(std::string& recv_buffer)
+bool PhysicalServer::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_req,
+									std::string& recv_buffer,
+									ReadingTypePattern reading_pattern)
 {
-	const std::string ContentLength = "Content-Length: ";
-	const std::string TransferChunked = "Transfer-Encoding: chunked";
-	const std::string EndPattern = "\r\n\r\n";
-	const std::string EndChunkPattern = "0\r\n\r\n";
+	const std::string& pattern = TypePatternToString(reading_pattern);
+	bool has_been_filled = false;
 
-	while (!recv_buffer.empty())
+	if (!pattern.empty())
 	{
-		size_t end_pos = recv_buffer.find(EndPattern);
-		ReceivingQueue::receiving_msg_type& current_msg = m_PendingRequests.GetLastNotFilled();
+		size_t end_pos = recv_buffer.find(pattern);
 
 		if (end_pos != std::string::npos)
 		{
-			if (!current_msg.header_filled)
-			{
-				current_msg.header_filled = true;
-
-				size_t content_length_pos = recv_buffer.find(ContentLength);
-				if (content_length_pos == std::string::npos)
-				{
-					current_msg.is_chunked = true;
-
-					size_t end_body_chunked_pos = recv_buffer.find(EndChunkPattern);
-					if (end_body_chunked_pos != std::string::npos)
-					{
-						current_msg.is_finished = true;
-						current_msg.msg += recv_buffer.substr(0, end_body_chunked_pos + EndChunkPattern.size());
-						recv_buffer.erase(0, end_body_chunked_pos + EndChunkPattern.size());
-						continue;
-					}
-					size_t chunk_end_pos = recv_buffer.rfind(EndPattern); /// если в пакете несколько чанков
-					current_msg.msg += recv_buffer.substr(0, chunk_end_pos + EndPattern.size());
-					recv_buffer.erase(0, chunk_end_pos + EndPattern.size());
-				}
-				else
-				{
-					size_t body_end_pos = recv_buffer.find(EndPattern, end_pos + EndPattern.size());
-					current_msg.msg += recv_buffer.substr(0, body_end_pos + EndPattern.size());
-					recv_buffer.erase(0, body_end_pos + EndPattern.size());
-					if (body_end_pos != std::string::npos)
-					{
-						current_msg.is_finished = true;
-						continue;
-					}
-				}
-			}
+			has_been_filled = true;
+			end_pos += pattern.size();
 		}
-		else
+		filling_req.msg += recv_buffer.substr(0, end_pos);
+		recv_buffer.erase(0, end_pos);
+	}
+	else
+	{
+		size_t how_to_reading = std::min(recv_buffer.size(), filling_req.body_size_for_read);
+
+		filling_req.msg += recv_buffer.substr(0, how_to_reading);
+		recv_buffer.erase(0, how_to_reading);
+		filling_req.body_size_for_read -= how_to_reading;
+
+		if (filling_req.body_size_for_read == 0)
 		{
-			current_msg.msg += recv_buffer.substr(0, end_pos + EndPattern.size());
-			recv_buffer.erase(0, end_pos + EndPattern.size());
+			has_been_filled = true;
 		}
 	}
-}*/
+	return has_been_filled;
+}
+
+const std::string& PhysicalServer::TypePatternToString(ReadingTypePattern type) const
+{
+	static const std::string HeaderEndPattern = "\r\n\r\n";
+	static const std::string ChunkEndPattern = "0\r\n\r\n";
+	static const std::string Empty;
+
+	switch (type)
+	{
+		case HEADER:
+			return HeaderEndPattern;
+		case CHUNKED_BODY:
+			return ChunkEndPattern;
+		case SIMPLE_BODY:
+		default:
+			return Empty;
+	}
+}
