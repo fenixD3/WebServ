@@ -1,5 +1,6 @@
 #include "HttpResponse.h"
 
+#include <sstream>
 
 std::string HttpResponse::get_as_raw_string() {
 	std::stringstream sstm;

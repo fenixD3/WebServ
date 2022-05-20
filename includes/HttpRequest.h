@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.h                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
+/*   By: sergey <sergey@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 16:51:15 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/19 22:00:53 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/05/22 20:13:04 by sergey           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@ enum HttpMethod
 	GET,
 	POST,
 	DELETE,
+	HEAD,
 	//PUT,
 	UNKNOWN
 };
@@ -31,6 +32,7 @@ inline const char* ToString(HttpMethod value)
 		case GET:       return "GET";
 		case POST:      return "POST";
 		case DELETE:    return "DELETE";
+		case HEAD:      return "HEAD";
 		//case PUT:       return "PUT";
 		default:        return "UNKNOWN";
 	}
@@ -45,6 +47,8 @@ inline HttpMethod ToHttpMethod(std::string value)
 		return POST;
 	else if (value == "DELETE")
 		return DELETE;
+	else if (value == "HEAD")
+		return HEAD;
 	else
 		return UNKNOWN;
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "HttpResponse.h"
-
+#include "Location.h"
 class HttpResponseBuilder {
 public:
 

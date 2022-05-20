@@ -1,7 +1,9 @@
 #pragma once
+#include <map>
+#include <string>
 
-#include "VirtualServer.h"
-
+typedef std::string type_tag;
+typedef std::string type_value;
 typedef std::map<type_tag, type_value> ResponseHeader;
 
 std::string ReadFile(std::string path);

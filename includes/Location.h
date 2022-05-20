@@ -5,16 +5,7 @@
 #include <vector>
 #include <sstream>
 
-
-enum HttpMethod
- {
-     GET,
-     POST,
-     DELETE,
-	 HEAD,
-     //PUT,
-     OTHER
- };
+#include <HttpRequest.h>
 
 class Location
 {

@@ -12,40 +12,6 @@
 class VirtualServerBuilder;
 */
 
-/*
-From commit 64422faae3a0d80ba619b044163f2b5e2d564825 - initial for request parcer
-*/
-
-typedef std::string type_tag;
-typedef std::string type_value;
-typedef std::map<type_tag, type_value> RequestHeader;
-typedef RequestHeader::iterator header_iterator;
-typedef HttpMethod e_http_method;
-class HttpRequest : public RequestHeader
-{
-    private:
-       [[maybe_unused]] size_t m_size;
-        std::vector<char> m_body; // maybe std::array due no dynamic change
-    public:
-        std::string request_address;
-        e_http_method http_method;
-        HttpRequest(
-            size_t size,
-            std::vector<char>& body,
-            e_http_method http_method_p)
-        : m_size(size)
-        , m_body(body)
-        , http_method(http_method_p)
-        {
-            // TODO Add all headers tags
-            // this->emplace("METHOD", ToString(http_method));
-        }
-};
-///  END commit 64422faae3a0d80ba619b044163f2b5e2d564825 - initial for request parcer
-
-
-
-
 
 class VirtualServer
 {
