@@ -115,9 +115,7 @@ void Cluster::CreatePhysicalServer(addrinfo *hints, const std::string& ip_number
 		exit(1);
 	}
 
-	std::cout
-			<< "Host ip: "
-			<< GetPrintableIP(curr->ai_addr);
+	std::cout << "Host ip: " << GetPrintableIP(curr->ai_addr);
 
 	freeaddrinfo(results);
 
@@ -127,10 +125,7 @@ void Cluster::CreatePhysicalServer(addrinfo *hints, const std::string& ip_number
 		exit(1);
 	}
 
-	std::cout
-		<< ", listening socket: "
-		<< listening_socket
-		<< std::endl;
+	std::cout << ", listening socket: " << listening_socket << std::endl;
 
 	m_Servers.push_back(raii_ptr<PhysicalServer>(new PhysicalServer(m_Config.GetServersByPort(port_number))));
 	m_Sockets.AddSocket(IOSocket(listening_socket, true, m_Servers.back().get()), Cluster::ReadEvent, ReadOrWriteSize);
@@ -202,7 +197,6 @@ void Cluster::Receive(IOSocket *event_socket)
 	}
 	else
 	{
-		std::cout << rec_buf << std::endl;
 		/// Parse Request Headers
 		std::string str_buf(rec_buf);
 		event_socket->GetServer()->ReadHeaders(str_buf);
