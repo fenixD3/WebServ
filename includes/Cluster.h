@@ -38,9 +38,9 @@ public:
     void Run();
 
 private:
-	void Accept(const IOSocket *event_socket, size_t socket_pdfs_idx);
-	void Receive(const IOSocket *event_socket, size_t socket_pdfs_idx);
-	void Send(const IOSocket *event_socket, size_t socket_pdfs_idx);
+	void Accept(IOSocket *event_socket);
+	void Receive(IOSocket *event_socket);
+	void Send(IOSocket *event_socket);
 
     void Init();
 	void CreatePhysicalServer(addrinfo *hints, const std::string& port_number);

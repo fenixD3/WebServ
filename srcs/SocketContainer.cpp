@@ -44,7 +44,7 @@ size_t SocketContainer::GetPdfsSize() const
 	return m_SocketsPdfs.size();
 }
 
-SocketEvent SocketContainer::GetEvent(size_t idx) const
+SocketEvent SocketContainer::GetEvent(size_t idx)
 {
 	SocketEvent event = {};
 	if (m_SocketsPdfs[idx].revents == 0)
@@ -58,19 +58,16 @@ SocketEvent SocketContainer::GetEvent(size_t idx) const
 		{
 			if (event.socket->IsListening())
 			{
-//				event.handlers.push_back(&Cluster::Accept);
-				event.handler = &Cluster::Accept;
+				event.handlers.push_back(&Cluster::Accept);
 			}
 			else
 			{
-//				event.handlers.push_back(&Cluster::Receive);
-				event.handler = &Cluster::Receive;
+				event.handlers.push_back(&Cluster::Receive);
 			}
 		}
 		if (m_SocketsPdfs[idx].revents & POLLOUT)
 		{
-//			event.handlers.push_back(&Cluster::Send);
-			event.handler = &Cluster::Send;
+			event.handlers.push_back(&Cluster::Send);
 		}
 	}
 	return event;

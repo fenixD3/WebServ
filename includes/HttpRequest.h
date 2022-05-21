@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 16:51:15 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/18 21:36:48 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/05/19 22:00:53 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,6 +141,35 @@ public:
 	e_transfer_encoding GetTransferEncoding()
 	{
 		return m_transfer_encoding_status;
+	};
+
+	std::string ToString()
+	{
+		std::string out = "";
+
+		out += "****** Metadata ******\n";
+		out += "Method : " + m_method + "\n";
+		out += "Path : " + m_path + "\n";
+		out += "Version : " + m_version + "\n";
+		out += "Query : " + m_query + "\n";
+		out += "Header Size : " + std::to_string(m_header_size) + "\n";
+		out += "Body Size : " + std::to_string(m_body_size) + "\n";
+		
+		out += "****** Header ******\n";
+		header_iterator itCur = this->begin();
+		while (itCur != this->end())
+		{
+			out += itCur->first + " : " + itCur->second + "\n";
+			itCur++;
+		}
+		out += "****** Body ******\n";
+		std::vector<char>::iterator itBodyCur = m_body.begin();
+		while (itBodyCur != m_body.end())
+		{
+			out += *itBodyCur;
+		}
+		out += "\n****** End ******\n";
+		return out;
 	};
 
 };
