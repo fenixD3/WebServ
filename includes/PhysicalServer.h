@@ -16,10 +16,12 @@ private:
 		struct ReceivingMsg
 		{
 			std::string msg;
-			bool header_filled = false;
-			bool is_finished = false;
-			HttpRequest *http_request = nullptr; /// TODO change to raii_pointer
+			bool header_filled;
+			bool is_finished;
+			raii_ptr<HttpRequest> http_request;
 			size_t body_size_for_read;
+
+			ReceivingMsg();
 		};
 
 		std::deque<ReceivingMsg> m_Queue;
@@ -58,7 +60,7 @@ private:
 	ReceivingQueue m_PendingRequests;
 
 public:
-	std::deque<raii_ptr<VirtualServer>> m_VirtualServers;
+	std::deque<raii_ptr<VirtualServer> > m_VirtualServers;
 
 public:
 	PhysicalServer(const std::deque<VirtualServer*>& servers);

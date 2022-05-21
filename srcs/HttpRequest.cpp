@@ -12,4 +12,7 @@
 
 #include "HttpRequest.h"
 
-HttpRequest::HttpRequest(){}
+HttpRequest::HttpRequest()
+	: m_transfer_encoding_status(STATIC)
+	, m_is_valid(false)
+{}

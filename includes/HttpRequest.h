@@ -88,7 +88,7 @@ private:
 	typedef CGIEnvironment t_cgi_environment;
 
 	t_cgi_environment m_cgi_env;
-	e_transfer_encoding m_transfer_encoding_status = e_transfer_encoding::STATIC;
+	e_transfer_encoding m_transfer_encoding_status;
 	size_t m_header_size;
 	size_t m_body_size;
 	std::vector<char> m_body;
@@ -96,7 +96,7 @@ private:
 	std::string m_query;
 	std::string m_version;
 	std::string m_method;
-	bool m_is_valid = false;
+	bool m_is_valid;
 
 public:
 	std::string request_address;

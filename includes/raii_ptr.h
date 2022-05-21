@@ -26,11 +26,11 @@ public:
 
     ~raii_ptr()
     {
-        delete data;
+		delete data;
     }
 
     raii_ptr(const raii_ptr& other)
-        : data(other.data)
+		: data(other.data)
     {
         const_cast<raii_ptr&>(other).data = NULL;
     }
@@ -40,6 +40,12 @@ public:
         data = new T;
         *data = *other.data;
     }
+
+	raii_ptr& operator=(const pointer other)
+	{
+		data = other;
+		return *this;
+	}
 
     reference operator*() const
     {
@@ -65,5 +71,5 @@ public:
 template <typename T>
 raii_ptr<T> make_default_ptr()
 {
-    return raii_ptr<T>();
+    return raii_ptr<T>(new T());
 }

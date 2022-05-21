@@ -12,6 +12,11 @@
 
 #include "RequestBuilder.h"
 
+HttpRequestBuilder::HttpRequestBuilder()
+	: c_message_line("\r\n")
+	, c_message_end("\r\n\r\n")
+{}
+
 HttpRequestBuilder& HttpRequestBuilder::GetInstance()
 {
 	static HttpRequestBuilder m_instance;

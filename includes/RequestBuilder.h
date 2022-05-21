@@ -27,8 +27,8 @@ private:
 
 	typedef HttpMethod e_http_method;
 
-	const char* c_message_line = "\r\n";
-	const char* c_message_end = "\r\n\r\n";
+	const char* c_message_line;
+	const char* c_message_end;
 
 public:
 	typedef HttpRequest http_request;
@@ -39,7 +39,7 @@ public:
 	void BuildHttpRequestBody(HttpRequestBuilder::http_request& http_req, const std::string& msg);
 
 private:
-	HttpRequestBuilder(){};
+	HttpRequestBuilder();
 	HttpRequestBuilder(HttpRequestBuilder const&);
 	void operator=(HttpRequestBuilder const&);
 

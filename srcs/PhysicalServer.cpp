@@ -1,5 +1,10 @@
 #include "PhysicalServer.h"
 
+PhysicalServer::ReceivingQueue::ReceivingMsg::ReceivingMsg()
+	: header_filled(false)
+	, is_finished(false)
+{}
+
 PhysicalServer::PhysicalServer(const std::deque<VirtualServer*>& servers)
 {
 	for (size_t i = 0; i < servers.size(); ++i)
@@ -21,7 +26,7 @@ void PhysicalServer::ReadHeaders(std::string& recv_buffer)
 	}
 	for (size_t i = 0; i < m_PendingRequests.Size() || m_PendingRequests[i].header_filled; ++i)
 	{
-		if (m_PendingRequests[i].http_request == nullptr)
+		if (!m_PendingRequests[i].http_request)
 		{
 			HttpRequestBuilder::http_request uncooked_req =
 				HttpRequestBuilder::GetInstance().BuildHttpRequestHeader(m_PendingRequests[i].msg);
@@ -40,10 +45,10 @@ void PhysicalServer::ReadBody(std::string& recv_buffer)
 			continue;
 		}
 
-		HttpRequest *http_req = m_PendingRequests[i].http_request;
+		HttpRequest *http_req = m_PendingRequests[i].http_request.get();
 		TransferEncoding encoding_type = http_req->GetTransferEncoding();
 		bool has_been_filled;
-		if (encoding_type == TransferEncoding::CHUNKED)
+		if (encoding_type == CHUNKED)
 		{
 			has_been_filled = FillRequestMsg(m_PendingRequests[i], recv_buffer, CHUNKED_BODY);
 		}
