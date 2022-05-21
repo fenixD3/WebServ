@@ -11,11 +11,10 @@ class Cluster;
 
 struct SocketEvent
 {
-	typedef void (Cluster::*handler_type)(const IOSocket*, size_t);
+	typedef void (Cluster::*handler_type)(IOSocket*);
 
-	const IOSocket *socket;
-	handler_type handler;
-	/*std::deque<handler_type> handlers;*/ /// get SIGPIPE
+	IOSocket *socket;
+	std::deque<handler_type> handlers; /// get SIGPIPE - try to write to closed socket
 };
 
 class SocketContainer
@@ -32,7 +31,7 @@ public:
 
 	pollfd *GetPdfs();
 	size_t GetPdfsSize() const;
-	SocketEvent GetEvent(size_t idx) const;
+	SocketEvent GetEvent(size_t idx);
 
 private:
 	size_t AddToPdfs(int socket, const short *events, size_t events_size);
