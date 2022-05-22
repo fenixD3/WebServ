@@ -16,6 +16,7 @@ public:
 	std::string body;
 	std::string status;
 
+	void SetHeader(std::string name, std::string value);
 	std::string get_as_raw_string();
 };
 

@@ -26,7 +26,7 @@ HttpResponse Worker::ProcessRequest(HttpRequest& request, const Location& locati
 		return HttpHead(request, location);
 		break;
 	case POST:
-		return HttpPost(request, location);
+		return HttpPost(location);
 		break;
 	default:
 		return HttpResponseBuilder::GetInstance().CreateErrorResponse(501, location);
@@ -56,8 +56,15 @@ HttpResponse Worker::ProcessCGIRequest(HttpRequest& request, const Location& loc
 	}
 
 	CgiWorker cgi_worker;
-	std::string responce_body = cgi_worker.executeCgi();
-
+	std::string responce_body = cgi_worker.executeCgi(cgi_script_path, request_address, request);
+	size_t body_start = responce_body.find("\n\n");
+	size_t content_type_colon = responce_body.find("\n\n");
+	if (body_start == std::string::npos || content_type_colon == std::string::npos) {
+		return HttpResponseBuilder::GetInstance().CreateErrorResponse(500, location);
+	}
+	HttpResponse response = HttpResponseBuilder::GetInstance().CreateResponse(responce_body.substr(body_start), 200);
+	response.SetHeader("Content-Type", responce_body.substr(content_type_colon, body_start));
+	return response;
 }
 
 std::string ResolvePagePath(std::string request_address, std::string root, std::string default_file) {
@@ -105,7 +112,7 @@ HttpResponse Worker::HttpHead(HttpRequest& request, const Location& location) {
 }
 
 
-HttpResponse Worker::HttpPost(HttpRequest& request, const Location& location) {
+HttpResponse Worker::HttpPost(const Location& location) {
 	// POST метод можно обработать только с помощью CGI
 	return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, location);
 }

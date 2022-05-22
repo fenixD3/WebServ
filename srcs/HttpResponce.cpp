@@ -17,3 +17,7 @@ std::string HttpResponse::get_as_raw_string() {
 	}
 	return sstm.str();
 }
+
+void HttpResponse::SetHeader(std::string name, std::string value) {
+	header[name] = value;	
+}

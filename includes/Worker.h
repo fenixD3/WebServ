@@ -9,7 +9,7 @@ class Worker
 private:
 	HttpResponse HttpGet(HttpRequest& request, const Location& location);
 	HttpResponse HttpHead(HttpRequest& request, const Location& location);
-	HttpResponse HttpPost(HttpRequest& request, const Location& location);
+	HttpResponse HttpPost(const Location& location);
 	HttpResponse HttpDelete(HttpRequest& request, const Location& location);
 	HttpResponse ProcessCGIRequest(HttpRequest& request, const Location& location);
 

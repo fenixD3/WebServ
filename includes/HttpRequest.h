@@ -6,7 +6,7 @@
 /*   By: sergey <sergey@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 16:51:15 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/22 20:13:04 by sergey           ###   ########.fr       */
+/*   Updated: 2022/05/22 20:13:41 by sergey           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,7 @@ typedef RequestHeader::iterator header_iterator;
 typedef std::map<std::string, std::string> CGIEnvironment;
 typedef RequestHeader::iterator cgi_iterator;
 
-class HttpRequest : private RequestHeader
+class HttpRequest : public RequestHeader
 {
 	friend class HttpRequestBuilder;
 
