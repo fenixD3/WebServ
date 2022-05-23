@@ -39,6 +39,7 @@ public:
     {
         data = new T;
         *data = *other.data;
+		return *this;
     }
 
 	raii_ptr& operator=(const pointer other)

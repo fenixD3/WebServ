@@ -199,20 +199,26 @@ void Cluster::Receive(IOSocket *event_socket)
 	{
 		/// Parse Request Headers
 		std::string str_buf(rec_buf);
-		event_socket->GetServer()->ReadHeaders(str_buf);
-		event_socket->GetServer()->ReadBody(str_buf);
+		event_socket->ReadHeaders(str_buf);
+		event_socket->ReadBody(str_buf);
 		/// Transfer to VirtualServer
 	}
 }
 
 void Cluster::Send(IOSocket *event_socket)
 {
-	/**
-	 * \todo
-	 * Проверка готовности ответа для клиента и отправка
-	 */
-//	if (send(event_socket->GetFd(), "Hello", 5, 0) == -1)
-//	{
-//		std::cerr << "send: " << strerror(errno) << std::endl;; /// maybe forbidden due subject
-//	}
+	IOSocket::sending_msg_const_ptr message = event_socket->GetNextSendable();
+	if (message != NULL)
+	{
+		ssize_t sending_bytes = send(event_socket->GetFd(), message->GetSendableFormat(), 5, 0);
+
+		if (sending_bytes == -1)
+		{
+			std::cerr << "send: " << strerror(errno) << std::endl; /// maybe forbidden due subject
+		}
+		else
+		{
+			event_socket->UpdateSendingQueue(sending_bytes);
+		}
+	}
 }
