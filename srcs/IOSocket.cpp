@@ -46,59 +46,41 @@ void IOSocket::SetClientSideClosing(bool closing)
 
 void IOSocket::ReadHeaders(std::string& recv_buffer)
 {
-	while (!recv_buffer.empty())
+	ReceivingQueue::receiving_msg_type& filling_msg = m_PendingRequests.GetLastNotFilledHeader();
+	filling_msg.header_filled = FillRequestMsg(filling_msg, recv_buffer, HEADER);
+	if (filling_msg.header_filled)
 	{
-		ReceivingQueue::receiving_msg_type& filling_req = m_PendingRequests.GetLastNotFilledHeader();
-		bool has_been_filled = FillRequestMsg(filling_req, recv_buffer, HEADER);
-		if (has_been_filled)
-		{
-			filling_req.header_filled = true;
-		}
-	}
-	for (size_t i = 0; i < m_PendingRequests.Size() || m_PendingRequests[i].header_filled; ++i)
-	{
-		if (!m_PendingRequests[i].http_request)
-		{
-			HttpRequestBuilder::http_request uncooked_req =
-					HttpRequestBuilder::GetInstance().BuildHttpRequestHeader(m_PendingRequests[i].msg);
-			m_PendingRequests[i].http_request = &uncooked_req;
-			m_PendingRequests[i].body_size_for_read = uncooked_req.GetContentLength();
-		}
+		HttpRequestBuilder::http_request uncooked_req =
+				HttpRequestBuilder::GetInstance().BuildHttpRequestHeader(filling_msg.msg);
+		filling_msg.http_request = &uncooked_req;
+		filling_msg.body_size_for_read = uncooked_req.GetContentLength();
 	}
 }
 
 void IOSocket::ReadBody(std::string& recv_buffer)
 {
-	for (size_t i = 0; !recv_buffer.empty() || i < m_PendingRequests.Size(); ++i)
+	ReceivingQueue::receiving_msg_type& filling_msg = m_PendingRequests.GetLastNotFilled();
+	HttpRequest *http_req = filling_msg.http_request.get();
+	TransferEncoding encoding_type = http_req->GetTransferEncoding();
+
+	if (encoding_type == CHUNKED)
 	{
-		if (!m_PendingRequests[i].header_filled || m_PendingRequests[i].is_finished)
-		{
-			continue;
-		}
+		filling_msg.is_finished = FillRequestMsg(filling_msg, recv_buffer, CHUNKED_BODY);
+	}
+	else
+	{
+		filling_msg.is_finished = FillRequestMsg(filling_msg, recv_buffer, SIMPLE_BODY);
+	}
 
-		HttpRequest *http_req = m_PendingRequests[i].http_request.get();
-		TransferEncoding encoding_type = http_req->GetTransferEncoding();
-		bool has_been_filled;
-		if (encoding_type == CHUNKED)
-		{
-			has_been_filled = FillRequestMsg(m_PendingRequests[i], recv_buffer, CHUNKED_BODY);
-		}
-		else
-		{
-			has_been_filled = FillRequestMsg(m_PendingRequests[i], recv_buffer, SIMPLE_BODY);
-		}
-
-		if (has_been_filled)
-		{
-			m_PendingRequests[i].is_finished = true;
-			HttpRequestBuilder::GetInstance().BuildHttpRequestBody(*m_PendingRequests[i].http_request, m_PendingRequests[i].msg);
-		}
+	if (filling_msg.is_finished)
+	{
+		HttpRequestBuilder::GetInstance().BuildHttpRequestBody(*http_req, filling_msg.msg);
 	}
 }
 
-bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_req,
-									std::string& recv_buffer,
-									ReadingTypePattern reading_pattern)
+bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
+								std::string& recv_buffer,
+								ReadingTypePattern reading_pattern)
 {
 	const std::string& pattern = TypePatternToString(reading_pattern);
 	bool has_been_filled = false;
@@ -112,18 +94,18 @@ bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_req,
 			has_been_filled = true;
 			end_pos += pattern.size();
 		}
-		filling_req.msg += recv_buffer.substr(0, end_pos);
+		filling_msg.msg += recv_buffer.substr(0, end_pos);
 		recv_buffer.erase(0, end_pos);
 	}
 	else
 	{
-		size_t how_to_reading = std::min(recv_buffer.size(), filling_req.body_size_for_read);
+		size_t how_to_reading = std::min(recv_buffer.size(), filling_msg.body_size_for_read);
 
-		filling_req.msg += recv_buffer.substr(0, how_to_reading);
+		filling_msg.msg += recv_buffer.substr(0, how_to_reading);
 		recv_buffer.erase(0, how_to_reading);
-		filling_req.body_size_for_read -= how_to_reading;
+		filling_msg.body_size_for_read -= how_to_reading;
 
-		if (filling_req.body_size_for_read == 0)
+		if (filling_msg.body_size_for_read == 0)
 		{
 			has_been_filled = true;
 		}

@@ -45,6 +45,15 @@ private:
 			return m_Queue.back();
 		}
 
+		receiving_msg_type& GetLastNotFilled()
+		{
+			if (m_Queue.back().is_finished)
+			{
+				throw std::runtime_error("There aren't request without body!!"); /// Wasn't caught!
+			}
+			return m_Queue.back();
+		}
+
 		size_t Size() const
 		{
 			return m_Queue.size();
@@ -95,6 +104,11 @@ private:
 			const char *GetSendableFormat() const
 			{
 				return msg.c_str();
+			}
+
+			size_t GetSendableSize() const
+			{
+				return sending_size;
 			}
 		};
 
@@ -162,7 +176,7 @@ public:
 	void UpdateSendingQueue(ssize_t sent_bytes);
 
 private:
-	bool FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_req,
+	bool FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 						std::string& recv_buffer,
 						ReadingTypePattern reading_pattern);
 

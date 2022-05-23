@@ -133,6 +133,11 @@ public:
 		return m_is_valid;
 	};
 
+	size_t HeaderSize()
+	{
+		return m_header_size;
+	};
+
 	int GetContentLength()
 	{
 		return m_body_size;
@@ -167,8 +172,12 @@ public:
 		while (itBodyCur != m_body.end())
 		{
 			out += *itBodyCur;
+			if (itBodyCur + 1 == m_body.end())
+			{
+				out += '\n';
+			}
 		}
-		out += "\n****** End ******\n";
+		out += "****** End ******\n";
 		return out;
 	};
 
