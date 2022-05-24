@@ -10,6 +10,7 @@
 
 class VirtualServer
 {
+	friend class VirtualServerBuilder;
 public:
 	struct UriProps
 	{
@@ -22,9 +23,6 @@ public:
 	std::map<std::string, UriProps> m_UriToProperties;
 	std::map<std::string, std::string> m_ErrorRoutes;
 	std::map<std::string, std::string> m_StandardRoutes;
-
-private:
-    friend class VirtualServerBuilder;
 
 public:
 	VirtualServer();

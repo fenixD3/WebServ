@@ -169,7 +169,6 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(cons
 	header_iterator itTransferEncoding = http_req.find("Transfer-Encoding");
 	if (itTransferEncoding == http_req.end())
 	{
-		const size_t last_sequence_size = 2; /// For the last \r\n
 		header_iterator itConLen = http_req.find("Content-Length");
 		if (itConLen == http_req.end())
 		{
@@ -179,7 +178,6 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(cons
 		{
 			http_req.m_body_size = std::stoi(itConLen->second);
 		}
-		http_req.m_body_size += last_sequence_size;
 	}
 	else
 	{
@@ -189,7 +187,6 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(cons
 	http_req.m_is_valid = is_valid;
 	http_req.m_header_size = cur_size;
 	std::cerr << "Read request header with validity status: " + std::to_string(http_req.m_is_valid)  << std::endl;
-	std::cerr << http_req.ToString() << std::endl;
 	return http_req;
 }
 
@@ -204,4 +201,5 @@ void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& 
 		std::cerr << "Read request body with size: " << std::to_string(http_req.m_body.size())  << std::endl;
 		GetQuery(http_req);
 	}
+	std::cerr << http_req.ToString() << std::endl;
 }

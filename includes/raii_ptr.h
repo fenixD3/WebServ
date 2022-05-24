@@ -37,13 +37,31 @@ public:
 
     raii_ptr& operator=(const raii_ptr& other)
     {
-        data = new T;
-        *data = *other.data;
+		if (other.data != NULL)
+		{
+			data = new T;
+			*data = *other.data;
+		}
+		else
+		{
+			delete data;
+			data = other.data;
+		}
+		return *this;
     }
 
 	raii_ptr& operator=(const pointer other)
 	{
-		data = other;
+		if (other != NULL)
+		{
+			data = new T;
+			*data = *other;
+		}
+		else
+		{
+			delete data;
+			data = other;
+		}
 		return *this;
 	}
 
