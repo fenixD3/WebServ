@@ -133,12 +133,11 @@ const std::string& IOSocket::TypePatternToString(ReadingTypePattern type) const
 
 IOSocket::sending_msg_const_ptr IOSocket::GetNextSendable()
 {
-	for (IOSocket::ReceivingQueue::queue_type::iterator it = m_PendingRequests.Begin();
-		it != m_PendingRequests.End(); )
+	for (IOSocket::ReceivingQueue::queue_type::iterator it = m_PendingRequests.Begin(); it != m_PendingRequests.End(); )
 	{
 		if (!it->is_finished)
 		{
-			break;
+			return NULL;
 		}
 		std::string response = m_Server->ProcessRequest(it->http_request.get());
 		m_PendingResponses.PushNew(response);
