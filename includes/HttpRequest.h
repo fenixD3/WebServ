@@ -103,7 +103,6 @@ private:
 	bool m_is_valid;
 
 public:
-	std::string request_address;
 
 	HttpRequest();
 

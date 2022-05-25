@@ -37,18 +37,18 @@ HttpResponse HttpResponseBuilder::CreateResponse(std::string body, int code) { /
 	response.code = code;
 	response.body = body;
 	response.header = CreateBaseHeaders();
-	response.header["Content-Length"] = response.body.size();
+	response.header["Content-Length"] = std::to_string(response.body.size());
 	response.header["Content-Type"] = "text/html";
 	response.status = std::string("Ok");
 	return response;
 }
 
-HttpResponse HttpResponseBuilder::CreateErrorResponse(int code, const Location& location) {
+HttpResponse HttpResponseBuilder::CreateErrorResponse(int code, const VirtualServer* virtual_server) {
 	HttpResponse response;
 	response.code = code;
-	response.body = ReadFile(location.GetErrorPage(code));
+	response.body = ReadFile(virtual_server->GetErrorPage(code));
 	response.header = CreateBaseHeaders();
-	response.header["Content-Length"] = response.body.size();
+	response.header["Content-Length"] = std::to_string(response.body.size());
 	response.header["Content-Type"] = "text/html";
 	response.status = std::string("Error");
 	return response;

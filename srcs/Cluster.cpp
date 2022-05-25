@@ -127,8 +127,9 @@ void Cluster::CreatePhysicalServer(addrinfo *hints, const std::string& ip_number
 
 	std::cout << ", listening socket: " << listening_socket << std::endl;
 
-	m_Servers.push_back(raii_ptr<PhysicalServer>(new PhysicalServer(m_Config.GetServersByPort(port_number))));
-	m_Sockets.AddSocket(IOSocket(listening_socket, true, m_Servers.back().get()), Cluster::ReadEvent, ReadOrWriteSize);
+	m_Servers.push_back(new PhysicalServer(m_Config.GetServersByPort(port_number)));
+//	m_Sockets.AddSocket(IOSocket(listening_socket, true, m_Servers.back().get()), Cluster::ReadEvent, ReadOrWriteSize);
+    m_Sockets.AddSocket(IOSocket(listening_socket, true, m_Servers.back()), Cluster::ReadEvent, ReadOrWriteSize);
 }
 
 std::string Cluster::GetPrintableIP(sockaddr *addr_info) const

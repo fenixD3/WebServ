@@ -22,8 +22,9 @@ char** convert_map_to_c_arr(std::map<std::string, std::string>& process_env) {
 	return result;
 }
 
-char** CgiWorker::create_env(std::string cgi_script_path, std::string request_address, HttpRequest& request) {
+char** CgiWorker::create_env(std::string cgi_script_path, std::string request_address, HttpRequest* request_pointer) {
 	std::map<std::string, std::string> process_env(env);
+	HttpRequest& request = *request_pointer;
 	if (request["Auth-Scheme"].size()) {
 		process_env["AUTH_TYPE"] = request["Authorization"];
 	}
@@ -52,7 +53,7 @@ void free_env(char** env_array) {
 	delete[] to_delete;
 }
 
-std::string CgiWorker::executeCgi(std::string cgi_script_path, std::string request_address, HttpRequest& request) {
+std::string CgiWorker::executeCgi(std::string cgi_script_path, std::string request_address, HttpRequest* request) {
 
 	int pipe_in[2];
 	int pipe_out[2];
@@ -79,7 +80,8 @@ std::string CgiWorker::executeCgi(std::string cgi_script_path, std::string reque
 
 		close(pipe_in[0]);
 		close(pipe_out[1]);
-		write(pipe_in[1], std::string(request.GetBody().begin(), request.GetBody().end()).c_str(), request.GetBody().size());
+		// todo для очень больших реквестов можно создавать отдельный поток, чтобы pipe не блокировался
+		write(pipe_in[1], std::string(request->GetBody().begin(), request->GetBody().end()).c_str(), request->GetBody().size());
 		int len = -1;
 		while (len) {
 			int len = read(pipe_out[0], buffer, 1024);

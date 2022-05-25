@@ -9,6 +9,38 @@ const std::string LocationNames::ExceptedMethods = "limit_except";
 
 VirtualServer::VirtualServer() {}
 
+VirtualServer::UriProps VirtualServer::GetLocationForUrl(std::string url) {
+	std::cout << this << " GetLocationForUrl " << &m_UriToProperties << std::endl;
+	std::map<std::string, UriProps>::iterator it;
+  
+	return m_UriToProperties.begin()->second;
+    // for (it = m_UriToProperties.rbegin(); it != m_UriToProperties.rend(); it++) {
+    // for (it = m_UriToProperties.begin(); it != m_UriToProperties.end(); it++) {
+    //    if (url.rfind(it->first, 0) == 0) {
+	// 	   return &it->second;
+	//    }
+    // }
+	// return NULL;
+}
+
+bool VirtualServer::UriProps::IsMethodAllowed(std::string method) const {
+    return true;
+    if (method.size()) {
+        return true;
+    }
+}
+
+VirtualServer::~VirtualServer() {
+    std::cout << " DESTRUCTOR VirtualServer " << std::endl;
+}
+
+std::string VirtualServer::GetErrorPage(int code) const {
+	if (m_ErrorRoutes.find(std::to_string(code)) != m_ErrorRoutes.end()) {
+		return m_ErrorRoutes.at(std::to_string(code));
+	}
+	return m_ErrorRoutes.at(std::to_string(404)); // страница 404 есть у всех серверов? может слать просто любую страницу?
+}
+
 void LocationBuilder::AddRoot(const std::string& root)
 {
 	m_RootPath = root;
@@ -46,8 +78,10 @@ void LocationBuilder::AddUriProperty(const std::string& uri, const std::string& 
 
 void LocationBuilder::BuildAllRoutes()
 {
-	for (std::map<std::string, std::string>::iterator it = m_StandardRoutes.begin(); it != m_StandardRoutes.end(); ++it)
-	{
+	for (std::map<std::string, std::string>::iterator it = m_StandardRoutes.begin(); it != m_StandardRoutes.end(); ++it) {
+        if (it->first == LocationNames::Index) {
+            continue;
+        }
 		it->second = m_RootPath + it->second;
 	}
 	for (std::map<std::string, std::string>::iterator it = m_Errors.begin(); it != m_Errors.end(); ++it)
@@ -76,14 +110,14 @@ std::map<std::string, std::map<std::string, std::string> > LocationBuilder::GetU
 }
 
 VirtualServerBuilder::VirtualServerBuilder()
-	: m_VS(make_default_ptr<VirtualServer>())
+	: m_VS(new VirtualServer)
 {}
 
 VirtualServerBuilder::operator VirtualServer*()
 {
-	VirtualServer* result = m_VS.get();
-	m_VS = NULL;
-	return result;
+//	VirtualServer* result = m_VS.get();
+//	m_VS = NULL;
+	return m_VS;
 }
 
 void VirtualServerBuilder::AddServerName(const std::string& serv_name)
@@ -139,24 +173,25 @@ void VirtualServerBuilder::BuildAllRoutes()
 		std::map<std::string, std::string>& props = it->second;
 		VirtualServer::UriProps& property = m_VS->m_UriToProperties[uri];
 		property.path = props.at(LocationNames::UriPath);
+		property.uri = uri;
 
-		if (props.count(LocationNames::ExceptedMethods))
-		{
-			std::string& excepted_methods = props.at(LocationNames::ExceptedMethods);
-			while (!excepted_methods.empty())
-			{
-				size_t delim = excepted_methods.find(',');
-				property.excepted_methods.push_back(excepted_methods.substr(0, delim));
-				if (delim == std::string::npos)
-				{
-					excepted_methods.clear();
-				}
-				else
-				{
-					excepted_methods.erase(0, delim + 1);
-				}
-			}
-		}
+		// if (props.count(LocationNames::ExceptedMethods))
+		// {
+		// 	std::string& excepted_methods = props.at(LocationNames::ExceptedMethods);
+		// 	while (!excepted_methods.empty())
+		// 	{
+		// 		size_t delim = excepted_methods.find(',');
+		// 		property.excepted_methods.push_back(excepted_methods.substr(0, delim));
+		// 		if (delim == std::string::npos)
+		// 		{
+		// 			excepted_methods.clear();
+		// 		}
+		// 		else
+		// 		{
+		// 			excepted_methods.erase(0, delim + 1);
+		// 		}
+		// 	}
+		// }
 	}
 }
 

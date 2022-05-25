@@ -1,7 +1,8 @@
 #pragma once
 
 #include "HttpResponse.h"
-#include "Location.h"
+
+#include "VirtualServer.h"
 class HttpResponseBuilder {
 public:
 
@@ -10,7 +11,7 @@ public:
 
 		return instance;
 	}
-	HttpResponse CreateErrorResponse(int code, const Location& location);
+	HttpResponse CreateErrorResponse(int code, const VirtualServer* virtual_server);
 	HttpResponse CreateResponse(std::string body, int code); //, const Location& location);
 
 

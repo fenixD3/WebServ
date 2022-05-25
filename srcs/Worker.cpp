@@ -5,37 +5,40 @@
 #include "CgiWorker.h"
 
 
-HttpResponse Worker::ProcessRequest(HttpRequest& request, const Location& location) {
-	if (!location.IsMethodAllowed(ToHttpMethod(request.GetMethod()))) {
-		return HttpResponseBuilder::GetInstance().CreateErrorResponse(405, location);
+Worker::Worker() {}
+Worker::~Worker() {}
+
+HttpResponse Worker::ProcessRequest(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
+	if (!location->IsMethodAllowed(request->GetMethod())) {
+		return HttpResponseBuilder::GetInstance().CreateErrorResponse(405, virtual_server);
 	}
-	if (request.request_address.find("..") != std::string::npos) {
-		return HttpResponseBuilder::GetInstance().CreateErrorResponse(403, location);
+	if (request->GetPath().find("..") != std::string::npos) {
+		return HttpResponseBuilder::GetInstance().CreateErrorResponse(403, virtual_server);
 	}
 
 	if (false) { // if (location.is_cgi_path(request.request_address))
-		return ProcessCGIRequest(request, location);
+		return ProcessCGIRequest(request, virtual_server, location);
 	}
 
-	switch (ToHttpMethod(request.GetMethod()))
+	switch (ToHttpMethod(request->GetMethod()))
 	{
 	case GET:
-		return HttpGet(request, location);
+		return HttpGet(request, virtual_server, location);
 		break;
 	case HEAD:
-		return HttpHead(request, location);
+		return HttpHead(request, virtual_server, location);
 		break;
 	case POST:
-		return HttpPost(location);
+		return HttpPost(request, virtual_server, location);
 		break;
 	default:
-		return HttpResponseBuilder::GetInstance().CreateErrorResponse(501, location);
+		return HttpResponseBuilder::GetInstance().CreateErrorResponse(501, virtual_server);
 		break;
 	}
 }
 
-HttpResponse Worker::ProcessCGIRequest(HttpRequest& request, const Location& location) {
-	std::string request_address = request.request_address;
+HttpResponse Worker::ProcessCGIRequest(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
+	std::string request_address = request->GetPath();
 	std::string cgi_script_path = ".";
 	while (request_address.size()) {
 		size_t first_slash = request_address.find('/');
@@ -60,25 +63,25 @@ HttpResponse Worker::ProcessCGIRequest(HttpRequest& request, const Location& loc
 	size_t body_start = responce_body.find("\n\n");
 	size_t content_type_colon = responce_body.find("\n\n");
 	if (body_start == std::string::npos || content_type_colon == std::string::npos) {
-		return HttpResponseBuilder::GetInstance().CreateErrorResponse(500, location);
+		return HttpResponseBuilder::GetInstance().CreateErrorResponse(500, virtual_server);
 	}
 	HttpResponse response = HttpResponseBuilder::GetInstance().CreateResponse(responce_body.substr(body_start), 200);
 	response.SetHeader("Content-Type", responce_body.substr(content_type_colon, body_start));
 	return response;
 }
 
-std::string ResolvePagePath(std::string request_address, std::string root, std::string default_file) {
-	std::string path = root; //+ request_address + default_file;
+std::string ResolvePagePath(std::string request_address, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
+    if (request_address == "") {
+        request_address = "/";
+    }
+	std::string path = location->path + request_address.substr(location->uri.size());
+    struct stat s;
+    if( stat(path.c_str(), &s) == 0) {
+        if (s.st_mode & S_IFDIR) {
+            path += "/" + virtual_server->m_StandardRoutes.at(LocationNames::Index);
+        }
+    }
 
-	if (root.back() == '/' && request_address.front() == '/') {
-		path += request_address.substr(1);
-	} else {
-		path += request_address;
-	}
-	if (path.back() != '/') {
-		return path;
-	}
-	path += default_file;
 	return path;
 }
 
@@ -90,11 +93,11 @@ bool Worker::IsFileExist(std::string file_path) {
 
 
 
-HttpResponse Worker::HttpGet(HttpRequest& request, const Location& location) {
-	std::string file_path = ResolvePagePath(request.request_address, location.root, location.index_file);
+HttpResponse Worker::HttpGet(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
+	std::string file_path = ResolvePagePath(request->GetPath(), virtual_server, location);
 
 	if (!IsFileExist(file_path)) {
-		return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, location);
+		return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, virtual_server);
 	}
 
 	std::string file_content = ReadFile(file_path);
@@ -105,24 +108,24 @@ HttpResponse Worker::HttpGet(HttpRequest& request, const Location& location) {
 	return response;
 }
 
-HttpResponse Worker::HttpHead(HttpRequest& request, const Location& location) {
-	HttpResponse response = HttpGet(request, location);
+HttpResponse Worker::HttpHead(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
+	HttpResponse response = HttpGet(request, virtual_server, location);
 	response.body = "";
 	return response;
 }
 
 
-HttpResponse Worker::HttpPost(const Location& location) {
+HttpResponse Worker::HttpPost(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
 	// POST метод можно обработать только с помощью CGI
-	return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, location);
+	return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, virtual_server);
 }
 
 
-HttpResponse Worker::HttpDelete(HttpRequest& request, const Location& location) {
-	std::string file_path = ResolvePagePath(request.request_address, location.root, location.index_file);
-
-	if (IsFileExist(file_path)) {
-		remove(file_path.c_str());
-	}
-	return HttpResponseBuilder::GetInstance().CreateResponse("{\"success\":\"true\"}", 200);
-}
+//HttpResponse Worker::HttpDelete(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
+//	std::string file_path = ResolvePagePath(request->GetPath(), virtual_server, location);
+//
+//	if (IsFileExist(file_path)) {
+//		remove(file_path.c_str());
+//	}
+//	return HttpResponseBuilder::GetInstance().CreateResponse("{\"success\":\"true\"}", 200);
+//}
