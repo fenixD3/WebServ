@@ -74,7 +74,7 @@ std::string ResolvePagePath(std::string request_address, const VirtualServer* vi
     if (request_address == "") {
         request_address = "/";
     }
-	std::string path = location->path + request_address.substr(location->uri.size());
+	std::string path = location->path + "/" + request_address.substr(location->uri.size());
     struct stat s;
     if( stat(path.c_str(), &s) == 0) {
         if (s.st_mode & S_IFDIR) {
