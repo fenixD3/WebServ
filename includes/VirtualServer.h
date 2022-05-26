@@ -8,11 +8,6 @@
 
 #include "raii_ptr.h"
 
-/*
-class VirtualServerBuilder;
-*/
-
-
 class VirtualServer
 {
 	friend class VirtualServerBuilder;
@@ -109,7 +104,7 @@ public:
 class VirtualServerBuilder
 {
 private:
-    VirtualServer* m_VS;
+    raii_ptr<VirtualServer> m_VS;
 	LocationBuilder m_LocationBuilder;
 
 public:
