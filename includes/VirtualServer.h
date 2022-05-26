@@ -8,14 +8,23 @@
 
 #include "raii_ptr.h"
 
+/*
+class VirtualServerBuilder;
+*/
+
+
 class VirtualServer
 {
 	friend class VirtualServerBuilder;
 public:
-	struct UriProps
+	class UriProps
 	{
+    public:
 		std::deque<std::string> excepted_methods;
 		std::string path;
+        std::string uri;
+
+        bool IsMethodAllowed(std::string method) const;
 	};
 public:
     std::string m_ServerName;
@@ -26,7 +35,11 @@ public:
 
 public:
 	VirtualServer();
+    ~VirtualServer();
+    UriProps* GetLocationForUrl(std::string url);
+    bool operator<(const VirtualServer& other);
 
+    std::string GetErrorPage(int code) const ;
 	/// Test output
 	/*friend std::ostream& operator<<(std::ostream& out, const VirtualServer& vs)
 	{
@@ -96,7 +109,7 @@ public:
 class VirtualServerBuilder
 {
 private:
-    raii_ptr<VirtualServer> m_VS;
+    VirtualServer* m_VS;
 	LocationBuilder m_LocationBuilder;
 
 public:
