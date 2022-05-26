@@ -25,6 +25,12 @@ VirtualServer::UriProps* VirtualServer::GetLocationForUrl(std::string url) {
 	return NULL;
 }
 
+bool VirtualServer::IsCgiPath(std::string path) const {
+	// TODO
+	// check is LocationNames::Cgi key exsist 
+	return path.rfind(m_CgiUri, 0) == 0;
+}
+
 bool VirtualServer::UriProps::IsMethodAllowed(std::string method) const {
     return true;
     if (method.size()) {
@@ -164,6 +170,7 @@ void VirtualServerBuilder::AddUriProperty(const std::string& uri, const std::str
 
 void VirtualServerBuilder::BuildAllRoutes()
 {
+    m_VS->m_CgiUri = m_LocationBuilder.GetStandardRoutes()[LocationNames::Cgi];
 	m_LocationBuilder.BuildAllRoutes();
 	m_VS->m_StandardRoutes = m_LocationBuilder.GetStandardRoutes();
 	m_VS->m_ErrorRoutes = m_LocationBuilder.GetErrors();

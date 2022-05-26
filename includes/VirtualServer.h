@@ -20,13 +20,16 @@ public:
         std::string uri;
 
         bool IsMethodAllowed(std::string method) const;
+		
 	};
 public:
     std::string m_ServerName;
+    std::string m_CgiUri;
 	size_t m_BodyLimit;
 	std::map<std::string, UriProps> m_UriToProperties;
 	std::map<std::string, std::string> m_ErrorRoutes;
 	std::map<std::string, std::string> m_StandardRoutes;
+	bool IsCgiPath(std::string path) const;
 
 public:
 	VirtualServer();

@@ -4,6 +4,8 @@
 #include "HttpRequest.h"
 #include <map>
 
+std::string ReadFile(std::string path);
+
 class CgiWorker {
 	std::map<std::string, std::string> env;
 	char** create_env(std::string cgi_script_path, std::string request_address, HttpRequest* request_pointer);

@@ -15,6 +15,8 @@ private:
 	HttpResponse ProcessCGIRequest(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location);
 
 	bool IsFileExist(std::string file_path);
+    bool IsPathExist(std::string path);
+    bool IsDirExist(std::string file_path);
 public:
 	Worker();
 	~Worker();
