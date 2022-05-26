@@ -9,18 +9,20 @@ const std::string LocationNames::ExceptedMethods = "limit_except";
 
 VirtualServer::VirtualServer() {}
 
-VirtualServer::UriProps VirtualServer::GetLocationForUrl(std::string url) {
+VirtualServer::UriProps* VirtualServer::GetLocationForUrl(std::string url) {
 	std::cout << this << " GetLocationForUrl " << &m_UriToProperties << std::endl;
-	std::map<std::string, UriProps>::iterator it;
+//	std::map<std::string, UriProps>::iterator it;
   
-	return m_UriToProperties.begin()->second;
-    // for (it = m_UriToProperties.rbegin(); it != m_UriToProperties.rend(); it++) {
-    // for (it = m_UriToProperties.begin(); it != m_UriToProperties.end(); it++) {
-    //    if (url.rfind(it->first, 0) == 0) {
-	// 	   return &it->second;
-	//    }
-    // }
-	// return NULL;
+	// return m_UriToProperties.begin()->second;
+	std::map<std::string, UriProps>::reverse_iterator it;
+    for (it = m_UriToProperties.rbegin(); it != m_UriToProperties.rend(); it++) {
+        std::string url_a = url;
+        std::string location_url = it->first;
+       if (url.rfind(it->first, 0) == 0) {
+		   return &it->second;
+	   }
+    }
+	return NULL;
 }
 
 bool VirtualServer::UriProps::IsMethodAllowed(std::string method) const {
@@ -90,7 +92,7 @@ void LocationBuilder::BuildAllRoutes()
 	}
 	for (std::map<std::string, std::map<std::string, std::string> >::iterator it = m_UriToProperties.begin(); it != m_UriToProperties.end(); ++it)
 	{
-		it->second[LocationNames::UriPath] = m_RootPath + it->second[LocationNames::UriPath] + it->first;
+		it->second[LocationNames::UriPath] = m_RootPath + it->second[LocationNames::UriPath];
 	}
 }
 
@@ -175,23 +177,23 @@ void VirtualServerBuilder::BuildAllRoutes()
 		property.path = props.at(LocationNames::UriPath);
 		property.uri = uri;
 
-		// if (props.count(LocationNames::ExceptedMethods))
-		// {
-		// 	std::string& excepted_methods = props.at(LocationNames::ExceptedMethods);
-		// 	while (!excepted_methods.empty())
-		// 	{
-		// 		size_t delim = excepted_methods.find(',');
-		// 		property.excepted_methods.push_back(excepted_methods.substr(0, delim));
-		// 		if (delim == std::string::npos)
-		// 		{
-		// 			excepted_methods.clear();
-		// 		}
-		// 		else
-		// 		{
-		// 			excepted_methods.erase(0, delim + 1);
-		// 		}
-		// 	}
-		// }
+		if (props.count(LocationNames::ExceptedMethods))
+		{
+			std::string& excepted_methods = props.at(LocationNames::ExceptedMethods);
+			while (!excepted_methods.empty())
+			{
+				size_t delim = excepted_methods.find(',');
+				property.excepted_methods.push_back(excepted_methods.substr(0, delim));
+				if (delim == std::string::npos)
+				{
+					excepted_methods.clear();
+				}
+				else
+				{
+					excepted_methods.erase(0, delim + 1);
+				}
+			}
+		}
 	}
 }
 

@@ -10,6 +10,7 @@ PhysicalServer::PhysicalServer(const std::deque<VirtualServer*>& servers)
 
 VirtualServer* PhysicalServer::ResolveUrlToServer(HttpRequest *request) {
 	// плохо понимаю, как находить нужный физический сервер для запроса
+	// TODO
 	return m_NameToVirtualServers.begin()->second;
 	// return m_NameToVirtualServers["server"].get();
 	// for (std::map<std::string, raii_ptr<VirtualServer>::iterator it : m_NameToVirtualServers) {
@@ -23,11 +24,11 @@ std::string PhysicalServer::ProcessRequest(HttpRequest *request)
 	Worker worker;
 
 	VirtualServer* virtual_server = ResolveUrlToServer(request);
-	VirtualServer::UriProps location = virtual_server->GetLocationForUrl(request->GetPath());
+	VirtualServer::UriProps* location = virtual_server->GetLocationForUrl(request->GetPath());
 	// if (!location) {
 	// 	return worker.CreateErrorResponce(virtual_server, 404)
 	// }
 
-	std::string responce = worker.ProcessRequest(request, virtual_server, &location).get_as_raw_string();
+	std::string responce = worker.ProcessRequest(request, virtual_server, location).get_as_raw_string();
 	return responce;
 }

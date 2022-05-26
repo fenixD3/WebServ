@@ -9,7 +9,7 @@ Worker::Worker() {}
 Worker::~Worker() {}
 
 HttpResponse Worker::ProcessRequest(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
-	if (!location->IsMethodAllowed(request->GetMethod())) {
+	if (!location || !location->IsMethodAllowed(request->GetMethod())) {
 		return HttpResponseBuilder::GetInstance().CreateErrorResponse(405, virtual_server);
 	}
 	if (request->GetPath().find("..") != std::string::npos) {

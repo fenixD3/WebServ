@@ -20,7 +20,7 @@ public:
 	class UriProps
 	{
     public:
-		// std::deque<std::string> excepted_methods;
+		std::deque<std::string> excepted_methods;
 		std::string path;
         std::string uri;
 
@@ -36,7 +36,7 @@ public:
 public:
 	VirtualServer();
     ~VirtualServer();
-    UriProps GetLocationForUrl(std::string url);
+    UriProps* GetLocationForUrl(std::string url);
     bool operator<(const VirtualServer& other);
 
     std::string GetErrorPage(int code) const ;
