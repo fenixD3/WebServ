@@ -136,11 +136,6 @@ public:
 		return m_is_valid;
 	};
 
-	size_t HeaderSize()
-	{
-		return m_header_size;
-	};
-
 	int GetContentLength()
 	{
 		return m_body_size;

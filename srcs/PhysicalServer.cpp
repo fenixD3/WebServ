@@ -4,14 +4,14 @@ PhysicalServer::PhysicalServer(const std::deque<VirtualServer*>& servers)
 {
 	for (size_t i = 0; i < servers.size(); ++i)
 	{
-		m_NameToVirtualServers.insert(std::make_pair(servers[i]->m_ServerName, servers[i]));
+		m_NameToVirtualServers.insert(std::make_pair(servers[i]->m_ServerName, raii_ptr<VirtualServer>(servers[i])));
 	}
 }
 
 VirtualServer* PhysicalServer::ResolveUrlToServer(HttpRequest *request) {
 	// плохо понимаю, как находить нужный физический сервер для запроса
 	// TODO
-	return m_NameToVirtualServers.begin()->second;
+	return m_NameToVirtualServers.begin()->second.get();
 	// return m_NameToVirtualServers["server"].get();
 	// for (std::map<std::string, raii_ptr<VirtualServer>::iterator it : m_NameToVirtualServers) {
 	// 	if (request->GetPath().rfind(pattern, 0) == it.second->)

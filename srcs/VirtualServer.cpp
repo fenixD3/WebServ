@@ -112,14 +112,14 @@ std::map<std::string, std::map<std::string, std::string> > LocationBuilder::GetU
 }
 
 VirtualServerBuilder::VirtualServerBuilder()
-	: m_VS(new VirtualServer)
+	: m_VS(make_default_ptr<VirtualServer>())
 {}
 
 VirtualServerBuilder::operator VirtualServer*()
 {
-//	VirtualServer* result = m_VS.get();
-//	m_VS = NULL;
-	return m_VS;
+	VirtualServer* result = m_VS.get();
+	m_VS = NULL;
+	return result;
 }
 
 void VirtualServerBuilder::AddServerName(const std::string& serv_name)

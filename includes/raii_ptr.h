@@ -37,16 +37,8 @@ public:
 
     raii_ptr& operator=(const raii_ptr& other)
     {
-		if (other.data != NULL)
-		{
-			data = new T;
-			*data = *other.data;
-		}
-		else
-		{
-			delete data;
-			data = other.data;
-		}
+		data = new T;
+		*data = *other.data;
 		return *this;
     }
 
@@ -59,7 +51,6 @@ public:
 		}
 		else
 		{
-			delete data;
 			data = other;
 		}
 		return *this;

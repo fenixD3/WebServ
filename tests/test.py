@@ -65,14 +65,14 @@ def run_test(test_method):
 
 
 if __name__ == "__main__":
-	run_test(test_get_method_1);
-	run_test(test_get_method_2);
-	run_test(test_get_method_3);
-	run_test(test_get_method_4);
-	run_test(test_head_method_1);
-	run_test(test_head_method_2);
-	run_test(test_head_method_3);
-	run_test(test_head_method_4);
+	run_test(test_get_method_1)
+	run_test(test_get_method_2)
+	run_test(test_get_method_3)
+	run_test(test_get_method_4)
+	run_test(test_head_method_1)
+	run_test(test_head_method_2)
+	run_test(test_head_method_3)
+	run_test(test_head_method_4)
 
 
 

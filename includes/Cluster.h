@@ -29,7 +29,7 @@ private:
 
 	const IConfig& m_Config;
 
-	std::deque<PhysicalServer*> m_Servers;
+	std::deque<raii_ptr<PhysicalServer> > m_Servers;
 	SocketContainer m_Sockets;
 
 public:

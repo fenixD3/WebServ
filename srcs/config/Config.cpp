@@ -258,7 +258,7 @@ const IConfig::physical_ports_ip_cont& Config::GetPhysicalEndpoints() const
 	return m_PhysicalPortsToIp;
 }
 
-const std::deque<VirtualServer*>&  Config::GetServersByPort(const std::string& port) const
+const std::deque<VirtualServer*>& Config::GetServersByPort(const std::string& port) const
 {
 	return m_PortToVirtualServers.at(port);
 }
