@@ -61,6 +61,11 @@ void IOSocket::ReadBody(std::string& recv_buffer)
 {
 	ReceivingQueue::receiving_msg_type& filling_msg = m_PendingRequests.GetLastNotFilled();
 	HttpRequest *http_req = filling_msg.http_request.get();
+	if (!http_req || http_req->IsValid())
+	{
+		std::cerr << "Bad request" << std::endl;
+		return;
+	}
 	TransferEncoding encoding_type = http_req->GetTransferEncoding();
 
 	if (encoding_type == CHUNKED)
