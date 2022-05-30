@@ -11,3 +11,5 @@ message(STATUS "${SOURCE}")
 add_executable(${PROJECT_NAME} ${SOURCE})
 
 target_include_directories(${PROJECT_NAME} PRIVATE includes)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND mv ${PROJECT_BINARY_DIR}/${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/${PROJECT_NAME})
