@@ -24,6 +24,7 @@ private:
 			std::string msg;
 			bool header_filled;
 			bool is_finished;
+			std::string boundary_end;
 			raii_ptr<HttpRequest> http_request;
 			size_t body_size_for_read;
 
@@ -36,20 +37,11 @@ private:
 		typedef ReceivingMsg receiving_msg_type;
 
 	public:
-		receiving_msg_type& GetLastNotFilledHeader()
-		{
-			if (m_Queue.empty() || (!m_Queue.empty() && m_Queue.back().header_filled))
-			{
-				m_Queue.push_back(ReceivingMsg());
-			}
-			return m_Queue.back();
-		}
-
 		receiving_msg_type& GetLastNotFilled()
 		{
-			if (m_Queue.back().is_finished)
+			if (m_Queue.empty() || (!m_Queue.empty() && m_Queue.back().is_finished))
 			{
-				throw std::runtime_error("There aren't request without body!!"); /// Wasn't caught!
+				m_Queue.push_back(ReceivingMsg());
 			}
 			return m_Queue.back();
 		}
@@ -179,6 +171,9 @@ private:
 	bool FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 						std::string& recv_buffer,
 						ReadingTypePattern reading_pattern);
+	bool CheckHeaderBoundary(ReceivingQueue::receiving_msg_type& filling_msg,
+							 std::string& recv_buffer,
+							 size_t simple_end_header);
 
 	const std::string& TypePatternToString(ReadingTypePattern type) const;
 };
