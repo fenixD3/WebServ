@@ -46,7 +46,12 @@ void IOSocket::SetClientSideClosing(bool closing)
 
 void IOSocket::ReadHeaders(std::string& recv_buffer)
 {
-	ReceivingQueue::receiving_msg_type& filling_msg = m_PendingRequests.GetLastNotFilledHeader();
+	ReceivingQueue::receiving_msg_type& filling_msg = m_PendingRequests.GetLastNotFilled();
+	if (filling_msg.header_filled)
+	{
+		return;
+	}
+
 	filling_msg.header_filled = FillRequestMsg(filling_msg, recv_buffer, HEADER);
 	if (filling_msg.header_filled)
 	{
@@ -60,6 +65,11 @@ void IOSocket::ReadHeaders(std::string& recv_buffer)
 void IOSocket::ReadBody(std::string& recv_buffer)
 {
 	ReceivingQueue::receiving_msg_type& filling_msg = m_PendingRequests.GetLastNotFilled();
+	if (!filling_msg.header_filled)
+	{
+		return;
+	}
+
 	HttpRequest *http_req = filling_msg.http_request.get();
 	TransferEncoding encoding_type = http_req->GetTransferEncoding();
 
@@ -91,11 +101,29 @@ bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 
 		if (end_pos != std::string::npos)
 		{
-			has_been_filled = true;
 			end_pos += pattern.size();
+			if (reading_pattern == HEADER)
+			{
+				has_been_filled = CheckHeaderBoundary(filling_msg, recv_buffer, end_pos);
+			}
+			else if (reading_pattern == CHUNKED_BODY)
+			{
+				has_been_filled = true;
+			}
 		}
 		filling_msg.msg += recv_buffer.substr(0, end_pos);
 		recv_buffer.erase(0, end_pos);
+	}
+	else if (!filling_msg.boundary_end.empty())
+	{
+		size_t boundary_body_pos = recv_buffer.find(filling_msg.boundary_end);
+		filling_msg.msg += recv_buffer.substr(0, boundary_body_pos);
+		if (boundary_body_pos != std::string::npos)
+		{
+			boundary_body_pos += filling_msg.boundary_end.size();
+			recv_buffer.erase(0, boundary_body_pos);
+			has_been_filled = true;
+		}
 	}
 	else
 	{
@@ -111,6 +139,23 @@ bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 		}
 	}
 	return has_been_filled;
+}
+
+bool IOSocket::CheckHeaderBoundary(ReceivingQueue::receiving_msg_type& filling_msg,
+								   std::string& recv_buffer,
+								   size_t simple_end_header)
+{
+	static const std::string HeaderBoundary = "boundary=";
+
+	size_t is_boundary = recv_buffer.find(HeaderBoundary);
+	if (is_boundary != std::string::npos)
+	{
+		filling_msg.boundary_end.assign("--" + recv_buffer.substr(is_boundary + HeaderBoundary.size(), recv_buffer.find("\r\n", is_boundary) - is_boundary - HeaderBoundary.size()) + "--\r\n");
+		filling_msg.msg += recv_buffer.substr(0, simple_end_header);
+		recv_buffer.erase(0, simple_end_header);
+		return FillRequestMsg(filling_msg, recv_buffer, HEADER);
+	}
+	return true;
 }
 
 const std::string& IOSocket::TypePatternToString(ReadingTypePattern type) const
