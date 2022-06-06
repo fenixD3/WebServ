@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/06/06 22:23:59 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/06/06 22:35:37 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,14 +164,15 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 		value = "";
 		if (http_req.m_need_boundary_checks)
 		{
-			if (current.find("--" + http_req.GetBoundary()))
+			if (current.find("--" + http_req.GetBoundary()) != std::string::npos)
 			{
 				std::cerr << "Found boundary : " << http_req.GetBoundary() << std::endl;
 				http_req.m_header_size += cur_size;
 				return std::make_pair(true, "--" + http_req.GetBoundary() + "--");
 			}
-			else if (current.find(http_req.GetBoundary() + "--"))
+			else if (current.find(http_req.GetBoundary() + "--") != std::string::npos)
 			{
+				std::cerr << "Found last boundary : " << http_req.GetBoundary() << std::endl;
 				break;
 			}
 		}
