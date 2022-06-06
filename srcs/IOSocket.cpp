@@ -63,6 +63,7 @@ void IOSocket::ReadHeaders(std::string& recv_buffer)
 			filling_msg.header_filled = false;
 			filling_msg.boundary_end = boundary_found.second;
 		}
+		filling_msg.body_size_for_read = filling_msg.http_request->GetContentLength();
 	}
 }
 
