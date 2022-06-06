@@ -164,7 +164,7 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 		key = "";
 		value = "";
 
-		if (!http_req.GetBoundary().empty()
+		if (http_req.GetBoundary().empty()
 			&& ToHttpMethod(http_req.m_method) == POST
 			&& ParseBoundary(boundary, current))
 		{
