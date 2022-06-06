@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/28 23:05:52 by marvin            #+#    #+#             */
-/*   Updated: 2022/05/18 21:37:17 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/06/06 20:48:00 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ private:
 	void GetQuery(HttpRequestBuilder::http_request& req);
 	void ParseKey(std::string& key, const  std::string& line);
 	void ParseValue(std::string& key, const  std::string& line);
+	bool ParseBoundery(std::string& boundery, const std::string& line);
 	std::string MakeHeaderForCGI(std::string& key);
 	
 	inline static int CGIFormatter(int value)

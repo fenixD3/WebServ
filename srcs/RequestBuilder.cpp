@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/19 21:53:12 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/06/06 21:41:34 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,20 @@ void HttpRequestBuilder::GetQuery(HttpRequestBuilder::http_request& req)
 	}
 }
 
-void HttpRequestBuilder::ParseKey(std::string& key, const  std::string& line)
+bool HttpRequestBuilder::ParseBoundery(std::string& boundery, const  std::string& line)
+{
+	size_t	i = line.find_first_of('=');
+
+	if (i != std::string::npos)
+	{
+		i = line.find_first_not_of(' ', i + 1);
+		boundery.append(line, i, std::string::npos);
+		return true;
+	}
+	return false;
+}
+
+void HttpRequestBuilder::ParseKey(std::string& key, const std::string& line)
 {
 	std::string	ret;
 
@@ -137,16 +150,41 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 	std::string current;
 	std::string key;
 	std::string value;
+	std::string boundery;
 	bool is_valid = true;
 	size_t cur_size = 0;
 	std::cerr << "Start building request" << std::endl;
 
-	is_valid = ParseInitialFields(http_req, GetNext(msg, cur_size));
+	if (!http_req.m_need_boundery_checks)
+	{
+		is_valid = ParseInitialFields(http_req, GetNext(msg, cur_size));
+	}
 
 	while ((current = GetNext(msg, cur_size)) != "\r" && current != "" && is_valid)
 	{
 		key = "";
 		value = "";
+		if (http_req.m_need_boundery_checks)
+		{
+			if (current.find("--" + http_req.GetBoundery()))
+			{
+				std::cerr << "Found boundery : " <<  boundery << std::endl;
+				http_req.m_header_size += cur_size;
+				return std::make_pair(true, "--" + http_req.GetBoundery() + "--");
+			}
+			else if (current.find(http_req.GetBoundery() + "--"))
+			{
+				break;
+			}
+		}
+		else if (ToHttpMethod(http_req.m_method) == POST
+			&& ParseBoundery(boundery, current))
+		{
+			std::cerr << "Found tag boundery : " <<  boundery << std::endl;
+			http_req.m_boundery = boundery;
+			http_req.m_need_boundery_checks = true;
+			continue;
+		}
 		ParseKey(key, current);
 		ParseValue(value, current);
 		if (key.find("Secret") != std::string::npos)
@@ -186,9 +224,9 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 	}
 
 	http_req.m_is_valid = is_valid;
-	http_req.m_header_size = cur_size;
+	http_req.m_header_size += cur_size;
 	std::cerr << "Read request header with validity status: " + std::to_string(http_req.m_is_valid)  << std::endl;
-	return std::make_pair(false, ""); /// TODO: POST temporary
+	return std::make_pair(http_req.GetBoundery() != "", !http_req.GetBoundery().empty() ?  "--" + http_req.GetBoundery() + "--" : "");
 }
 
 void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& http_req, const std::string& msg)

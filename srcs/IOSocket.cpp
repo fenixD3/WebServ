@@ -84,10 +84,12 @@ void IOSocket::ReadBody(std::string& recv_buffer)
 
 	if (encoding_type == CHUNKED)
 	{
+		std::cerr << "BOBO" << std::endl;
 		filling_msg.is_finished = FillRequestMsg(filling_msg, recv_buffer, CHUNKED_BODY);
 	}
 	else
 	{
+		std::cerr << "BUBU" << std::endl;
 		filling_msg.is_finished = FillRequestMsg(filling_msg, recv_buffer, SIMPLE_BODY);
 	}
 
