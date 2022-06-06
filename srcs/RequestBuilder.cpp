@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/06/06 22:49:01 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/06/06 23:19:17 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,7 +155,7 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 	std::string boundary;
 	bool is_valid = true;
 	size_t cur_size = 0;
-	std::cerr << "Start building request" << std::endl;
+	std::cerr << "Start building request from" << msg <<std::endl;
 
 	is_valid = ParseInitialFields(http_req, GetNext(msg, cur_size));
 
@@ -164,21 +164,9 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 		std::cerr << "PROCESS " << current << std::endl;
 		key = "";
 		value = "";
-		if (http_req.m_need_boundary_checks)
-		{
-			if (current.find("--" + http_req.GetBoundary()) != std::string::npos)
-			{
-				std::cerr << "Found boundary : " << http_req.GetBoundary() << std::endl;
-				http_req.m_header_size += cur_size;
-				return std::make_pair(true, "--" + http_req.GetBoundary() + "--");
-			}
-			else if (current.find(http_req.GetBoundary() + "--") != std::string::npos)
-			{
-				std::cerr << "Found last boundary : " << http_req.GetBoundary() << std::endl;
-				break;
-			}
-		}
-		else if (ToHttpMethod(http_req.m_method) == POST
+
+		if (!http_req.GetBoundary().empty()
+			&& ToHttpMethod(http_req.m_method) == POST
 			&& ParseBoundary(boundary, current))
 		{
 			std::cerr << "Found tag boundary : " << boundary << std::endl;
@@ -226,7 +214,8 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 	http_req.m_is_valid = is_valid;
 	http_req.m_header_size += cur_size;
 	std::cerr << "Read request header with validity status: " + std::to_string(http_req.m_is_valid)  << std::endl;
-	return std::make_pair(false, "");
+	//return std::make_pair(true, "");
+	return std::make_pair(!http_req.GetBoundary().empty(), !http_req.GetBoundary().empty() ? "--" + http_req.GetBoundary() + "--" : "");
 }
 
 void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& http_req, const std::string& msg)
