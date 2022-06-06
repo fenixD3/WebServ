@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/06/06 22:42:43 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/06/06 22:49:01 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,9 @@ void HttpRequestBuilder::GetQuery(HttpRequestBuilder::http_request& req)
 {
 	size_t			i;
 
+	std::cerr << "START: " << std::endl;
 	i = req.m_path.find_first_of('?');
+	std::cerr << "END: " << std::endl;
 	if (i != std::string::npos)
 	{
 		req.m_query.assign(req.m_path, i + 1, std::string::npos);
