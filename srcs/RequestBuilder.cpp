@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/06/06 22:35:37 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/06/06 22:42:43 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,7 +224,7 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 	http_req.m_is_valid = is_valid;
 	http_req.m_header_size += cur_size;
 	std::cerr << "Read request header with validity status: " + std::to_string(http_req.m_is_valid)  << std::endl;
-	return std::make_pair(http_req.GetBoundary() != "", !http_req.GetBoundary().empty() ?  "--" + http_req.GetBoundary() + "--" : "");
+	return std::make_pair(false, "");
 }
 
 void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& http_req, const std::string& msg)
