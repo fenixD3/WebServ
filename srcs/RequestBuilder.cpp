@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/06/06 23:22:07 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/06/06 23:27:20 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,13 +155,12 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 	std::string boundary;
 	bool is_valid = true;
 	size_t cur_size = 0;
-	std::cerr << "Start building request from" << msg <<std::endl;
+	std::cerr << "Start building request" <<std::endl;
 
 	is_valid = ParseInitialFields(http_req, GetNext(msg, cur_size));
 
 	while ((current = GetNext(msg, cur_size)) != "\r" && current != "" && is_valid)
 	{
-		std::cerr << "PROCESS " << current << std::endl;
 		key = "";
 		value = "";
 
