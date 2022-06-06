@@ -35,7 +35,7 @@ public:
 
 	static HttpRequestBuilder& GetInstance();
 
-	HttpRequestBuilder::http_request BuildHttpRequestHeader(const std::string& msg);
+	std::pair<bool, std::string> BuildHttpRequestHeader(const std::string& msg, http_request& http_req);
 	void BuildHttpRequestBody(HttpRequestBuilder::http_request& http_req, const std::string& msg);
 
 private:

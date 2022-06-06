@@ -130,9 +130,10 @@ std::string HttpRequestBuilder::MakeHeaderForCGI(std::string& key)
 	return "HTTP_" + key;
 }
 
-HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(const std::string& msg)
+/// TODO: POST return <true, value> if boundary was found or <false, empty> if wasn't
+/// TODO: POST value = "--" + boundary + "--"
+std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const std::string& msg, http_request& http_req)
 {
-	HttpRequestBuilder::http_request http_req;
 	std::string current;
 	std::string key;
 	std::string value;
@@ -155,7 +156,7 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(cons
 			http_req[key] = value;
 		}
 	}
-	
+
 	header_iterator itWWWAuth = http_req.find("Www-Authenticate");
 	if (itWWWAuth != http_req.end())
 	{
@@ -187,7 +188,7 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(cons
 	http_req.m_is_valid = is_valid;
 	http_req.m_header_size = cur_size;
 	std::cerr << "Read request header with validity status: " + std::to_string(http_req.m_is_valid)  << std::endl;
-	return http_req;
+	return std::make_pair(false, ""); /// TODO: POST temporary
 }
 
 void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& http_req, const std::string& msg)
