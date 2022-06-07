@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.h                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sergey <sergey@student.42.fr>              +#+  +:+       +#+        */
+/*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 16:51:15 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/22 20:13:41 by sergey           ###   ########.fr       */
+/*   Updated: 2022/06/06 22:51:46 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,6 +100,7 @@ private:
 	std::string m_query;
 	std::string m_version;
 	std::string m_method;
+	std::string m_boundary;
 	bool m_is_valid;
 
 public:
@@ -131,6 +132,11 @@ public:
 		return m_query;
 	};
 
+	std::string& GetBoundary()
+	{
+		return m_boundary;
+	};
+
 	bool IsValid()
 	{
 		return m_is_valid;
@@ -157,6 +163,7 @@ public:
 		out += "Query : " + m_query + "\n";
 		out += "Header Size : " + std::to_string(m_header_size) + "\n";
 		out += "Body Size : " + std::to_string(m_body_size) + "\n";
+		out += "Boundary : " + m_boundary + "\n";
 		
 		out += "****** Header ******\n";
 		header_iterator itCur = this->begin();
@@ -174,6 +181,7 @@ public:
 			{
 				out += '\n';
 			}
+			itBodyCur++;
 		}
 		out += "****** End ******\n";
 		return out;

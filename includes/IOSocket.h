@@ -171,9 +171,6 @@ private:
 	bool FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 						std::string& recv_buffer,
 						ReadingTypePattern reading_pattern);
-	bool CheckHeaderBoundary(ReceivingQueue::receiving_msg_type& filling_msg,
-							 std::string& recv_buffer,
-							 size_t simple_end_header);
 
 	const std::string& TypePatternToString(ReadingTypePattern type) const;
 };

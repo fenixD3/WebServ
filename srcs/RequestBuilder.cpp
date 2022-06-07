@@ -6,7 +6,7 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/05/19 21:53:12 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/06/06 23:27:20 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,20 @@ void HttpRequestBuilder::GetQuery(HttpRequestBuilder::http_request& req)
 	}
 }
 
-void HttpRequestBuilder::ParseKey(std::string& key, const  std::string& line)
+bool HttpRequestBuilder::ParseBoundary(std::string& boundary, const  std::string& line)
+{
+	if (line.find("boundary=") != std::string::npos)
+	{
+
+		size_t	i = line.find_first_of('=');
+		i = line.find_first_not_of(' ', i + 1);
+		boundary.append(line, i, std::string::npos);
+		return true;
+	}
+	return false;
+}
+
+void HttpRequestBuilder::ParseKey(std::string& key, const std::string& line)
 {
 	std::string	ret;
 
@@ -130,22 +143,42 @@ std::string HttpRequestBuilder::MakeHeaderForCGI(std::string& key)
 	return "HTTP_" + key;
 }
 
-HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(const std::string& msg)
+/// TODO: POST return <true, value> if boundary was found or <false, empty> if wasn't
+/// TODO: POST value = "--" + boundary + "--"
+std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const std::string& msg, http_request& http_req)
 {
-	HttpRequestBuilder::http_request http_req;
 	std::string current;
 	std::string key;
 	std::string value;
+	std::string boundary;
 	bool is_valid = true;
 	size_t cur_size = 0;
-	std::cerr << "Start building request" << std::endl;
+	std::cerr << "Start building request" <<std::endl;
 
-	is_valid = ParseInitialFields(http_req, GetNext(msg, cur_size));
+	std::string parsing_msg;
+	if (http_req.m_header_size == 0)
+	{
+		parsing_msg = msg;
+		is_valid = ParseInitialFields(http_req, GetNext(parsing_msg, cur_size));
+	}
+	else
+	{
+		parsing_msg = msg.substr(http_req.m_header_size);
+		is_valid = http_req.m_is_valid;
+	}
 
-	while ((current = GetNext(msg, cur_size)) != "\r" && current != "" && is_valid)
+	while ((current = GetNext(parsing_msg, cur_size)) != "\r" && current != "" && is_valid)
 	{
 		key = "";
 		value = "";
+
+		if (http_req.GetBoundary().empty()
+			&& ToHttpMethod(http_req.m_method) == POST
+			&& ParseBoundary(boundary, current))
+		{
+			std::cerr << "Found tag boundary : " << boundary << std::endl;
+			http_req.m_boundary = boundary;
+		}
 		ParseKey(key, current);
 		ParseValue(value, current);
 		if (key.find("Secret") != std::string::npos)
@@ -155,7 +188,7 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(cons
 			http_req[key] = value;
 		}
 	}
-	
+
 	header_iterator itWWWAuth = http_req.find("Www-Authenticate");
 	if (itWWWAuth != http_req.end())
 	{
@@ -185,15 +218,17 @@ HttpRequestBuilder::http_request HttpRequestBuilder::BuildHttpRequestHeader(cons
 	}
 
 	http_req.m_is_valid = is_valid;
-	http_req.m_header_size = cur_size;
+	http_req.m_header_size += cur_size;
+
 	std::cerr << "Read request header with validity status: " + std::to_string(http_req.m_is_valid)  << std::endl;
-	return http_req;
+	return std::make_pair(!boundary.empty(), !boundary.empty() ? "--" + boundary + "--" : "");
 }
 
 void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& http_req, const std::string& msg)
 {
 	std::string current;
 
+	std::cerr << "READ BODY" << std::endl;
 	if (http_req.m_is_valid)
 	{
 		current = msg.substr(http_req.m_header_size, std::string::npos);
