@@ -10,10 +10,6 @@ const std::string LocationNames::ExceptedMethods = "limit_except";
 VirtualServer::VirtualServer() {}
 
 VirtualServer::UriProps* VirtualServer::GetLocationForUrl(std::string url) {
-	std::cout << this << " GetLocationForUrl " << &m_UriToProperties << std::endl;
-//	std::map<std::string, UriProps>::iterator it;
-  
-	// return m_UriToProperties.begin()->second;
 	std::map<std::string, UriProps>::reverse_iterator it;
     for (it = m_UriToProperties.rbegin(); it != m_UriToProperties.rend(); it++) {
         std::string url_a = url;
