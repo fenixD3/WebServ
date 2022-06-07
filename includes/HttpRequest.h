@@ -102,7 +102,6 @@ private:
 	std::string m_method;
 	std::string m_boundary;
 	bool m_is_valid;
-	bool m_need_boundary_checks;
 
 public:
 

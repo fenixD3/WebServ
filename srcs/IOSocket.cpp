@@ -80,21 +80,14 @@ void IOSocket::ReadBody(std::string& recv_buffer)
 	}
 
 	HttpRequest *http_req = filling_msg.http_request.get();
-//	if (!http_req || !http_req->IsValid())
-//	{
-//		std::cerr << "Bad request" << std::endl;
-//		return;
-//	}
 	TransferEncoding encoding_type = http_req->GetTransferEncoding();
 
 	if (encoding_type == CHUNKED)
 	{
-		std::cerr << "BOBO" << std::endl;
 		filling_msg.is_finished = FillRequestMsg(filling_msg, recv_buffer, CHUNKED_BODY);
 	}
 	else
 	{
-		std::cerr << "BUBU" << std::endl;
 		filling_msg.is_finished = FillRequestMsg(filling_msg, recv_buffer, SIMPLE_BODY);
 	}
 

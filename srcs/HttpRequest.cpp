@@ -16,5 +16,4 @@ HttpRequest::HttpRequest()
 	: m_transfer_encoding_status(STATIC)
 	, m_boundary("")
 	, m_is_valid(false)
-	, m_need_boundary_checks(false)
 {}

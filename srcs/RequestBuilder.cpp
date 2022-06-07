@@ -97,9 +97,7 @@ void HttpRequestBuilder::GetQuery(HttpRequestBuilder::http_request& req)
 {
 	size_t			i;
 
-	std::cerr << "START: " << std::endl;
 	i = req.m_path.find_first_of('?');
-	std::cerr << "END: " << std::endl;
 	if (i != std::string::npos)
 	{
 		req.m_query.assign(req.m_path, i + 1, std::string::npos);
@@ -157,9 +155,19 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 	size_t cur_size = 0;
 	std::cerr << "Start building request" <<std::endl;
 
-	is_valid = ParseInitialFields(http_req, GetNext(msg, cur_size));
+	std::string parsing_msg;
+	if (http_req.m_header_size == 0)
+	{
+		parsing_msg = msg;
+		is_valid = ParseInitialFields(http_req, GetNext(parsing_msg, cur_size));
+	}
+	else
+	{
+		parsing_msg = msg.substr(http_req.m_header_size);
+		is_valid = http_req.m_is_valid;
+	}
 
-	while ((current = GetNext(msg, cur_size)) != "\r" && current != "" && is_valid)
+	while ((current = GetNext(parsing_msg, cur_size)) != "\r" && current != "" && is_valid)
 	{
 		key = "";
 		value = "";
@@ -170,7 +178,6 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 		{
 			std::cerr << "Found tag boundary : " << boundary << std::endl;
 			http_req.m_boundary = boundary;
-			http_req.m_need_boundary_checks = true;
 		}
 		ParseKey(key, current);
 		ParseValue(value, current);
@@ -211,10 +218,10 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 	}
 
 	http_req.m_is_valid = is_valid;
-	http_req.m_header_size = cur_size;
+	http_req.m_header_size += cur_size;
+
 	std::cerr << "Read request header with validity status: " + std::to_string(http_req.m_is_valid)  << std::endl;
-	//return std::make_pair(true, "");
-	return std::make_pair(!http_req.GetBoundary().empty(), !http_req.GetBoundary().empty() ? "--" + http_req.GetBoundary() + "--" : "");
+	return std::make_pair(!boundary.empty(), !boundary.empty() ? "--" + boundary + "--" : "");
 }
 
 void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& http_req, const std::string& msg)
