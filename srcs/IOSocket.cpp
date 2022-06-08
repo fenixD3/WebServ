@@ -123,9 +123,9 @@ bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 		if (boundary_body_pos != std::string::npos)
 		{
 			boundary_body_pos += filling_msg.boundary_end.size();
-			recv_buffer.erase(0, boundary_body_pos);
 			has_been_filled = true;
 		}
+		recv_buffer.erase(0, boundary_body_pos);
 	}
 	else
 	{
