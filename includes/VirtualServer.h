@@ -18,8 +18,12 @@ public:
 		std::deque<std::string> excepted_methods;
 		std::string path;
         std::string uri;
+		std::string cgi_extention;
+		std::string cgi_script;
 
         bool IsMethodAllowed(std::string method) const;
+		bool IsCgiPath(std::string path) const;
+
 		
 	};
 public:
@@ -80,6 +84,8 @@ struct LocationNames
 	static const std::string Upload;
 	static const std::string UriPath;
 	static const std::string ExceptedMethods;
+	static const std::string UriCgiExtention;
+	static const std::string UriCgiFile;
 };
 
 class LocationBuilder

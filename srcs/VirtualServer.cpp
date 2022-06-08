@@ -6,6 +6,8 @@ const std::string LocationNames::Cgi = "cgi";
 const std::string LocationNames::Upload = "upload";
 const std::string LocationNames::UriPath = "path";
 const std::string LocationNames::ExceptedMethods = "limit_except";
+const std::string LocationNames::UriCgiExtention = "cgi_extention";
+const std::string LocationNames::UriCgiFile = "cgi_script";
 
 VirtualServer::VirtualServer() {}
 
@@ -21,10 +23,28 @@ VirtualServer::UriProps* VirtualServer::GetLocationForUrl(std::string url) {
 	return NULL;
 }
 
+inline bool ends_with(std::string const & value, std::string const & ending)
+{
+    if (ending.size() > value.size()) {
+		return false;
+	} 
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
 bool VirtualServer::IsCgiPath(std::string path) const {
 	// TODO
 	// check is LocationNames::Cgi key exsist 
-	return path.rfind(m_CgiUri, 0) == 0;
+	if (path.rfind(m_CgiUri, 0) == 0) {
+		return true;
+	}
+	return false;
+}
+
+bool VirtualServer::UriProps::IsCgiPath(std::string path) const {
+	if (ends_with(path, cgi_extention)) {
+		return true;
+	}
+	return false;
 }
 
 bool VirtualServer::UriProps::IsMethodAllowed(std::string method) const {
@@ -179,6 +199,11 @@ void VirtualServerBuilder::BuildAllRoutes()
 		VirtualServer::UriProps& property = m_VS->m_UriToProperties[uri];
 		property.path = props.at(LocationNames::UriPath);
 		property.uri = uri;
+		if (props.count(LocationNames::UriCgiExtention) && 
+				props.count(LocationNames::UriCgiFile)) {
+			property.cgi_extention = props.at(LocationNames::UriCgiExtention);
+			property.cgi_script = props.at(LocationNames::UriCgiFile);
+		}
 
 		if (props.count(LocationNames::ExceptedMethods))
 		{

@@ -16,7 +16,8 @@ HttpResponse Worker::ProcessRequest(HttpRequest* request, const VirtualServer* v
 		return HttpResponseBuilder::GetInstance().CreateErrorResponse(403, virtual_server);
 	}
 
-	if (virtual_server->IsCgiPath(request->GetPath())) {
+	if (virtual_server->IsCgiPath(request->GetPath()) || location->IsCgiPath(request->GetPath())) {
+		std::cout << "Start CGI" << std::endl;
 		return ProcessCGIRequest(request, virtual_server, location);
 	}
 
