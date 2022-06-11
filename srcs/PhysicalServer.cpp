@@ -1,5 +1,6 @@
 #include "PhysicalServer.h"
 #include "Worker.h"
+
 PhysicalServer::PhysicalServer(const std::deque<VirtualServer*>& servers)
 {
 	for (size_t i = 0; i < servers.size(); ++i)

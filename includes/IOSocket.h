@@ -164,7 +164,8 @@ public:
 	void ReadHeaders(std::string& recv_buffer);
 	void ReadBody(std::string& recv_buffer);
 
-	sending_msg_const_ptr GetNextSendable();
+	bool PrepareNextSendable();
+	sending_msg_const_ptr GetNextResponse() const;
 	void UpdateSendingQueue(ssize_t sent_bytes);
 
 private:

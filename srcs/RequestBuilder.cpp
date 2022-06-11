@@ -143,8 +143,6 @@ std::string HttpRequestBuilder::MakeHeaderForCGI(std::string& key)
 	return "HTTP_" + key;
 }
 
-/// TODO: POST return <true, value> if boundary was found or <false, empty> if wasn't
-/// TODO: POST value = "--" + boundary + "--"
 std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const std::string& msg, http_request& http_req)
 {
 	std::string current;

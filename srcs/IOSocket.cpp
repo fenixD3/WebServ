@@ -125,6 +125,11 @@ bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 			boundary_body_pos += filling_msg.boundary_end.size();
 			has_been_filled = true;
 		}
+		/// TODO: Write Event (temp)
+		filling_msg.body_size_for_read -= recv_buffer.substr(0, boundary_body_pos).size();
+		std::cerr << "Still for read: " << filling_msg.body_size_for_read << std::endl;
+		/// TODO: Write Event (temp_end)
+
 		recv_buffer.erase(0, boundary_body_pos);
 	}
 	else
@@ -161,18 +166,23 @@ const std::string& IOSocket::TypePatternToString(ReadingTypePattern type) const
 	}
 }
 
-IOSocket::sending_msg_const_ptr IOSocket::GetNextSendable()
+bool IOSocket::PrepareNextSendable()
 {
 	for (IOSocket::ReceivingQueue::queue_type::iterator it = m_PendingRequests.Begin(); it != m_PendingRequests.End(); )
 	{
 		if (!it->is_finished)
 		{
-			return NULL;
+			return false;
 		}
 		std::string response = m_Server->ProcessRequest(it->http_request.get());
 		m_PendingResponses.PushNew(response);
 		it = m_PendingRequests.Erase(it);
 	}
+	return true;
+}
+
+IOSocket::sending_msg_const_ptr IOSocket::GetNextResponse() const
+{
 	return m_PendingResponses.GetNext();
 }
 

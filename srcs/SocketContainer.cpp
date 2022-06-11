@@ -34,6 +34,24 @@ void SocketContainer::DelFromPdfs(size_t deleted_idx)
 	m_SocketsPdfs.erase(m_SocketsPdfs.begin() + deleted_idx);
 }
 
+void SocketContainer::AddEvent(size_t sock_ind, const short *events, size_t events_size)
+{
+	pollfd& sock_pfd = m_SocketsPdfs[sock_ind];
+	for (size_t i = 0; i < events_size; ++i)
+	{
+		sock_pfd.events |= events[i];
+	}
+}
+
+void SocketContainer::DelEvent(size_t sock_ind, const short *events, size_t events_size)
+{
+	pollfd& sock_pfd = m_SocketsPdfs[sock_ind];
+	for (size_t i = 0; i < events_size; ++i)
+	{
+		sock_pfd.events ^= events[i];
+	}
+}
+
 pollfd *SocketContainer::GetPdfs()
 {
 	return m_SocketsPdfs.data();
