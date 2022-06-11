@@ -111,26 +111,36 @@ bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 		if (end_pos != std::string::npos)
 		{
 			end_pos += pattern.size();
-			has_been_filled = true;
 		}
 		filling_msg.msg += recv_buffer.substr(0, end_pos);
 		recv_buffer.erase(0, end_pos);
+
+		if (filling_msg.msg.find(pattern) != std::string::npos)
+		{
+			has_been_filled = true;
+		}
 	}
 	else if (!filling_msg.boundary_end.empty())
 	{
 		size_t boundary_body_pos = recv_buffer.find(filling_msg.boundary_end);
-		filling_msg.msg += recv_buffer.substr(0, boundary_body_pos);
+
 		if (boundary_body_pos != std::string::npos)
 		{
 			boundary_body_pos += filling_msg.boundary_end.size();
-			has_been_filled = true;
 		}
+		filling_msg.msg += recv_buffer.substr(0, boundary_body_pos);
+
 		/// TODO: Write Event (temp)
 		filling_msg.body_size_for_read -= recv_buffer.substr(0, boundary_body_pos).size();
 		std::cerr << "Still for read: " << filling_msg.body_size_for_read << std::endl;
 		/// TODO: Write Event (temp_end)
 
 		recv_buffer.erase(0, boundary_body_pos);
+
+		if (filling_msg.msg.find(filling_msg.boundary_end) != std::string::npos)
+		{
+			has_been_filled = true;
+		}
 	}
 	else
 	{
@@ -139,6 +149,8 @@ bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 		filling_msg.msg += recv_buffer.substr(0, how_to_reading);
 		recv_buffer.erase(0, how_to_reading);
 		filling_msg.body_size_for_read -= how_to_reading;
+
+		std::cerr << "Still for read: " << filling_msg.body_size_for_read << std::endl;
 
 		if (filling_msg.body_size_for_read == 0)
 		{
