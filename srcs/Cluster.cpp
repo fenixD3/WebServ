@@ -27,6 +27,9 @@ void Cluster::Run()
     while(true)
 	{
         int poll_cnt = poll(m_Sockets.GetPdfs(), m_Sockets.GetPdfsSize(), POLL_TIMEOUT);
+		/// TODO: Write Event (temp)
+		std::cerr << "After poll" << std::endl;
+		/// TODO: Write Event (temp_end)
 
         if (poll_cnt == -1)
         {
@@ -43,7 +46,7 @@ void Cluster::Run()
 			}
 			for (size_t handler_idx = 0; handler_idx < event.handlers.size(); ++handler_idx)
 			{
-				(this->*(event.handlers[handler_idx]))(event.socket);
+				(this->*(event.handlers[handler_idx]))(event.socket, i);
 				if (event.socket->IsClientSideClosed())
 				{
 					close(event.socket->GetFd());
@@ -147,7 +150,7 @@ void *Cluster::GetInputAddr(sockaddr *sa) const
     return &(reinterpret_cast<sockaddr_in6*>(sa)->sin6_addr);
 }
 
-void Cluster::Accept(IOSocket *event_socket) /// Почему от одного клиента приходит 2 соединения (браузер)
+void Cluster::Accept(IOSocket *event_socket, size_t /*sock_ind*/) /// Почему от одного клиента приходит 2 соединения (браузер)
 {
 	sockaddr_storage connecting_address = {};
 	socklen_t storage_size = sizeof(connecting_address);
@@ -158,7 +161,7 @@ void Cluster::Accept(IOSocket *event_socket) /// Почему от одного 
 	}
 	else
 	{
-		m_Sockets.AddSocket(IOSocket(connected_socket, false, event_socket->GetServer()), Cluster::ReadWriteEvent, Cluster::ReadAndWriteSize);
+		m_Sockets.AddSocket(IOSocket(connected_socket, false, event_socket->GetServer()), Cluster::ReadEvent, ReadOrWriteSize);
 
 		std::cout
 				<< "New connection from "
@@ -171,7 +174,7 @@ void Cluster::Accept(IOSocket *event_socket) /// Почему от одного 
 	}
 }
 
-void Cluster::Receive(IOSocket *event_socket)
+void Cluster::Receive(IOSocket *event_socket, size_t sock_ind)
 {
 	/**
 	 * \todo
@@ -204,13 +207,17 @@ void Cluster::Receive(IOSocket *event_socket)
 			event_socket->ReadHeaders(str_buf);
 			event_socket->ReadBody(str_buf);
 		}
+		if (event_socket->PrepareNextSendable())
+		{
+			m_Sockets.AddEvent(sock_ind, Cluster::WriteEvent, Cluster::ReadOrWriteSize);
+		}
 		/// Transfer to VirtualServer
 	}
 }
 
-void Cluster::Send(IOSocket *event_socket)
+void Cluster::Send(IOSocket *event_socket, size_t sock_ind)
 {
-	IOSocket::sending_msg_const_ptr message = event_socket->GetNextSendable();
+	IOSocket::sending_msg_const_ptr message = event_socket->GetNextResponse();
 	if (message != NULL)
 	{
 		ssize_t sending_bytes = send(event_socket->GetFd(), message->GetSendableFormat(), message->GetSendableSize(), 0);
@@ -223,5 +230,9 @@ void Cluster::Send(IOSocket *event_socket)
 		{
 			event_socket->UpdateSendingQueue(sending_bytes);
 		}
+	}
+	if (!event_socket->GetNextResponse())
+	{
+		m_Sockets.DelEvent(sock_ind, Cluster::WriteEvent, Cluster::ReadOrWriteSize);
 	}
 }

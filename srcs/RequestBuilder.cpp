@@ -143,8 +143,6 @@ std::string HttpRequestBuilder::MakeHeaderForCGI(std::string& key)
 	return "HTTP_" + key;
 }
 
-/// TODO: POST return <true, value> if boundary was found or <false, empty> if wasn't
-/// TODO: POST value = "--" + boundary + "--"
 std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const std::string& msg, http_request& http_req)
 {
 	std::string current;
@@ -221,7 +219,7 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 	http_req.m_header_size += cur_size;
 
 	std::cerr << "Read request header with validity status: " + std::to_string(http_req.m_is_valid)  << std::endl;
-	return std::make_pair(!boundary.empty(), !boundary.empty() ? "--" + boundary + "--" : "");
+	return std::make_pair(!boundary.empty(), !boundary.empty() ? "--" + boundary + "--\r\n" : "");
 }
 
 void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& http_req, const std::string& msg)
@@ -231,7 +229,13 @@ void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& 
 	std::cerr << "READ BODY" << std::endl;
 	if (http_req.m_is_valid)
 	{
-		current = msg.substr(http_req.m_header_size, std::string::npos);
+		size_t end_body = std::string::npos;
+		if (!http_req.m_boundary.empty())
+		{
+			end_body = msg.find("--" + http_req.m_boundary + "--\r\n") - http_req.m_header_size;
+		}
+
+		current = msg.substr(http_req.m_header_size, end_body);
 		http_req.m_body = std::vector<char>(current.begin(), current.end());
 		std::cerr << "Read request body with size: " << std::to_string(http_req.m_body.size())  << std::endl;
 		GetQuery(http_req);

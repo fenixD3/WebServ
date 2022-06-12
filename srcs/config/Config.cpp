@@ -79,7 +79,7 @@ std::string BlockExtractor::ExtractBlockName()
 	while (m_ConfigFile)
 	{
 		block_name = ExtractLogicPart(m_ConfigFile);
-		if (block_name.empty())
+		if (block_name.empty() || block_name.front() == '#')
 		{
 			continue;
 		}

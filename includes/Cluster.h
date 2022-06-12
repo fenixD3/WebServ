@@ -38,9 +38,9 @@ public:
     void Run();
 
 private:
-	void Accept(IOSocket *event_socket);
-	void Receive(IOSocket *event_socket);
-	void Send(IOSocket *event_socket);
+	void Accept(IOSocket *event_socket, size_t sock_ind);
+	void Receive(IOSocket *event_socket, size_t sock_ind);
+	void Send(IOSocket *event_socket, size_t sock_ind);
 
     void Init();
 	void CreatePhysicalServer(addrinfo *hints, const std::string& ip_number, const std::string& port_number);
