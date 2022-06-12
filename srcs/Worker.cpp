@@ -3,7 +3,8 @@
 #include "HttpResponseBuilder.h"
 
 #include "CgiWorker.h"
-
+#include <fstream>
+#include <sstream>
 
 Worker::Worker() {}
 Worker::~Worker() {}
@@ -32,6 +33,9 @@ HttpResponse Worker::ProcessRequest(HttpRequest* request, const VirtualServer* v
 	case POST:
 		return HttpPost(request, virtual_server, location);
 		break;
+    case PUT:
+        return HttpPost(request, virtual_server, location);
+        break;
 	default:
 		return HttpResponseBuilder::GetInstance().CreateErrorResponse(501, virtual_server);
 		break;
@@ -39,41 +43,41 @@ HttpResponse Worker::ProcessRequest(HttpRequest* request, const VirtualServer* v
 }
 
 HttpResponse Worker::ProcessCGIRequest(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
-	std::string request_address = request->GetPath().substr(virtual_server->m_CgiUri.size());
-	std::string cgi_script_path = virtual_server->m_StandardRoutes.at(LocationNames::Cgi);
-	while (request_address.size()) {
-		size_t first_slash = request_address.find('/');
-        if (first_slash == 0) {
-            request_address = request_address.substr(first_slash + 1);
-            continue;
-        }
-		std::string file_or_dir;
-		if (first_slash != std::string::npos) {
-			file_or_dir = request_address.substr(0, first_slash);
-		} else {
-			file_or_dir = request_address;
-		}
-		if (!IsPathExist(cgi_script_path + "/" + file_or_dir)) {
-            break;
-        }
-		request_address = request_address.substr(0, first_slash + 1);
-		cgi_script_path += "/" + file_or_dir;
-        if (IsFileExist(cgi_script_path) || first_slash == std::string::npos) {
-            break;
-        }
-	}
+	std::string request_address = request->GetPath().substr(location->uri.size());
+	std::string cgi_script_path = location->cgi_script;
+//	while (request_address.size()) {
+//		size_t first_slash = request_address.find('/');
+//        if (first_slash == 0) {
+//            request_address = request_address.substr(first_slash + 1);
+//            continue;
+//        }
+//		std::string file_or_dir;
+//		if (first_slash != std::string::npos) {
+//			file_or_dir = request_address.substr(0, first_slash);
+//		} else {
+//			file_or_dir = request_address;
+//		}
+//		if (!IsPathExist(cgi_script_path + "/" + file_or_dir)) {
+//            break;
+//        }
+//		request_address = request_address.substr(0, first_slash + 1);
+//		cgi_script_path += "/" + file_or_dir;
+//        if (IsFileExist(cgi_script_path) || first_slash == std::string::npos) {
+//            break;
+//        }
+//	}
     if (!IsFileExist(cgi_script_path)) {
         return HttpResponseBuilder::GetInstance().CreateErrorResponse(500, virtual_server);
     }
 	CgiWorker cgi_worker;
 	std::string responce_body = cgi_worker.executeCgi(cgi_script_path, request_address, request);
-	size_t body_start = responce_body.find("\n\n");
-	size_t content_type_colon = responce_body.find("\n\n");
-	if (body_start == std::string::npos || content_type_colon == std::string::npos) {
-		return HttpResponseBuilder::GetInstance().CreateErrorResponse(500, virtual_server);
-	}
-	HttpResponse response = HttpResponseBuilder::GetInstance().CreateResponse(responce_body.substr(body_start), 200);
-	response.SetHeader("Content-Type", responce_body.substr(content_type_colon, body_start));
+	int status = 200;
+    if (responce_body.find("Status: ") != std::string::npos) {
+        std::string status_line = responce_body.substr(8, 3);
+        std::istringstream(status_line) >> status;
+        responce_body = responce_body.substr(12);
+    }
+	HttpResponse response = HttpResponseBuilder::GetInstance().CreateResponse(responce_body, status);
 	return response;
 }
 
@@ -137,10 +141,51 @@ HttpResponse Worker::HttpHead(HttpRequest* request, const VirtualServer* virtual
 	return response;
 }
 
+std::string ExtractFileName(HttpRequest* request) {
+    if (!request->count("Content-Disposition")) {
+        return "";
+    }
+    std::string filename_part = request->at("Content-Disposition");
+    if (filename_part.find("filename") == std::string::npos) {
+        return "";
+    }
+    filename_part = filename_part.substr(filename_part.find("filename") + 9);
+    filename_part = filename_part.substr(filename_part.find("\"") + 1);
+    filename_part = filename_part.substr(0, filename_part.find("\""));
+    std::cout << filename_part << std::endl;
+    return filename_part;
+}
+
 
 HttpResponse Worker::HttpPost(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
 	// POST метод можно обработать только с помощью CGI
-	return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, virtual_server);
+    std::string file = ExtractFileName(request);
+    std::string file_path;
+    std::string request_path = request->GetPath();
+    if (location->uri.size() > 1) {
+        request_path = request_path.substr(location->uri.size());
+    }
+    std::string dir = location->path + request_path;
+    if (!ends_with(request_path, "/")) {
+        size_t sep = request_path.rfind("/");
+        file_path = location->path + request_path;
+        dir = location->path + request_path.substr(0, sep);
+    } else if (file.size()) {
+        file_path = location->path + request_path + "/" + file;
+    } else {
+        file_path = location->path + request_path + "/ " + "loaded_file.tmp";
+    }
+    if (!IsDirExist(dir)) {
+        return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, virtual_server);
+    }
+
+    std::ofstream file_stram;
+    file_stram.open(file_path);
+    file_stram << std::string(request->GetBody().begin(), request->GetBody().end());
+    file_stram.close();
+    HttpResponse response = HttpResponseBuilder::GetInstance().CreateResponse("{status: ok}", 201);
+
+    return response;
 }
 
 

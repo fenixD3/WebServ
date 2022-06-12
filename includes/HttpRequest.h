@@ -21,7 +21,7 @@ enum HttpMethod
 	POST,
 	DELETE,
 	HEAD,
-	//PUT,
+	PUT,
 	UNKNOWN
 };
 
@@ -33,7 +33,7 @@ inline const char* ToString(HttpMethod value)
 		case POST:      return "POST";
 		case DELETE:    return "DELETE";
 		case HEAD:      return "HEAD";
-		//case PUT:       return "PUT";
+		case PUT:       return "PUT";
 		default:        return "UNKNOWN";
 	}
 }
@@ -49,6 +49,8 @@ inline HttpMethod ToHttpMethod(std::string value)
 		return DELETE;
 	else if (value == "HEAD")
 		return HEAD;
+    else if (value == "PUT")
+        return PUT;
 	else
 		return UNKNOWN;
 }

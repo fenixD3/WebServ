@@ -41,6 +41,9 @@ bool VirtualServer::IsCgiPath(std::string path) const {
 }
 
 bool VirtualServer::UriProps::IsCgiPath(std::string path) const {
+    if (cgi_extention.empty()) {
+        return false;
+    }
 	if (ends_with(path, cgi_extention)) {
 		return true;
 	}
@@ -48,10 +51,7 @@ bool VirtualServer::UriProps::IsCgiPath(std::string path) const {
 }
 
 bool VirtualServer::UriProps::IsMethodAllowed(std::string method) const {
-    return true;
-    if (method.size()) {
-        return true;
-    }
+	return find(excepted_methods.begin(), excepted_methods.end(), method) != excepted_methods.end();
 }
 
 VirtualServer::~VirtualServer() {
@@ -68,6 +68,10 @@ std::string VirtualServer::GetErrorPage(int code) const {
 void LocationBuilder::AddRoot(const std::string& root)
 {
 	m_RootPath = root;
+}
+
+std::string LocationBuilder::GetRoot() const {
+    return m_RootPath;
 }
 
 void LocationBuilder::AddIndex(const std::string& index_page)
@@ -202,7 +206,7 @@ void VirtualServerBuilder::BuildAllRoutes()
 		if (props.count(LocationNames::UriCgiExtention) && 
 				props.count(LocationNames::UriCgiFile)) {
 			property.cgi_extention = props.at(LocationNames::UriCgiExtention);
-			property.cgi_script = props.at(LocationNames::UriCgiFile);
+			property.cgi_script = m_LocationBuilder.GetRoot() + "/" + props.at(LocationNames::UriCgiFile);
 		}
 
 		if (props.count(LocationNames::ExceptedMethods))

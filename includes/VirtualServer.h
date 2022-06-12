@@ -98,6 +98,7 @@ private:
 
 public:
 	void AddRoot(const std::string& root);
+    std::string GetRoot() const;
 	void AddIndex(const std::string& index_page);
 	void AddError(const std::string& error_code, const std::string& error_page);
 	void AddCgi(const std::string& cgi_path);
@@ -130,3 +131,6 @@ public:
 	void AddUriProperty(const std::string& uri, const std::string& prop_name, const std::string& prop_value);
 	void BuildAllRoutes();
 };
+
+
+bool ends_with(std::string const & value, std::string const & ending);
