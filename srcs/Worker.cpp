@@ -43,7 +43,8 @@ HttpResponse Worker::ProcessRequest(HttpRequest* request, const VirtualServer* v
 }
 
 HttpResponse Worker::ProcessCGIRequest(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
-	std::string request_address = request->GetPath().substr(location->uri.size());
+//	std::string request_address = request->GetPath().substr(location->uri.size());
+    std::string request_address = request->GetPath();
 	std::string cgi_script_path = location->cgi_script;
 //	while (request_address.size()) {
 //		size_t first_slash = request_address.find('/');
@@ -75,9 +76,17 @@ HttpResponse Worker::ProcessCGIRequest(HttpRequest* request, const VirtualServer
     if (responce_body.find("Status: ") != std::string::npos) {
         std::string status_line = responce_body.substr(8, 3);
         std::istringstream(status_line) >> status;
-        responce_body = responce_body.substr(12);
+        responce_body = responce_body.substr(responce_body.find("\r\n") + 2);
+    }
+    std::string content_type;
+    if (responce_body.find("Content-Type: ") != std::string::npos)  {
+        size_t line_end = responce_body.find("\r\n");
+        size_t content_start = responce_body.find("Content-Type: ") + std::string("Content-Type: ").size();
+        content_type = responce_body.substr(content_start, line_end - content_start);
+        responce_body = responce_body.substr(line_end + 3);
     }
 	HttpResponse response = HttpResponseBuilder::GetInstance().CreateResponse(responce_body, status);
+     response.SetHeader("Content-Type", content_type);
 	return response;
 }
 

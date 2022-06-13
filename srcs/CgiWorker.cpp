@@ -16,6 +16,7 @@ char** convert_map_to_c_arr(std::map<std::string, std::string>& process_env) {
 		std::string raw = elem->first + "=" + elem->second;
 		result[i] = new char[raw.size() + 1];
 		strcpy(result[i], raw.c_str());
+        result[i][raw.size() + 1] = 0;
 		++i;
 	}
 	result[i] = NULL;
@@ -38,6 +39,7 @@ char** CgiWorker::create_env(std::string cgi_script_path, std::string request_ad
 		process_env["QUERY_STRING"] = request_address.substr(term_pos);
 	} else {
 		process_env["PATH_INFO"] = request_address;
+        process_env["REQUEST_URI"] = request_address;
 	}
 	process_env["REQUEST_METHOD"] = request.GetMethod();
 	
