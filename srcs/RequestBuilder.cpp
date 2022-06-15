@@ -6,11 +6,12 @@
 /*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/06/06 23:27:20 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/06/15 21:37:13 by zytrams          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "RequestBuilder.h"
+#include <sstream>
 
 HttpRequestBuilder::HttpRequestBuilder()
 	: c_message_line("\r\n")
@@ -234,9 +235,29 @@ void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& 
 		{
 			end_body = msg.find("--" + http_req.m_boundary + "--\r\n") - http_req.m_header_size;
 		}
-
+		
 		current = msg.substr(http_req.m_header_size, end_body);
-		http_req.m_body = std::vector<char>(current.begin(), current.end());
+
+		std::istringstream iss(current);
+		std::string cleared;
+		if (http_req.GetTransferEncoding() == CHUNKED)
+		{
+			bool is_concat = false;
+			for (std::string line; std::getline(iss, line); )
+			{
+				if (is_concat)
+				{
+					cleared += line;
+				}
+				is_concat = !is_concat;
+			}
+		}
+		else
+		{
+			cleared = current;
+		}
+
+		http_req.m_body = std::vector<char>(cleared.begin(), cleared.end());
 		std::cerr << "Read request body with size: " << std::to_string(http_req.m_body.size())  << std::endl;
 		GetQuery(http_req);
 	}
