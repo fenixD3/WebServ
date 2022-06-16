@@ -180,12 +180,12 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 		}
 		ParseKey(key, current);
 		ParseValue(value, current);
-		if (key.find("Secret") != std::string::npos)
-			http_req.m_cgi_env[MakeHeaderForCGI(key)] = value;
-		else
-		{
+//		if (key.find("Secret") != std::string::npos)
+//			http_req.m_cgi_env[MakeHeaderForCGI(key)] = value;
+//		else
+//		{
 			http_req[key] = value;
-		}
+//		}
 	}
 
 	header_iterator itWWWAuth = http_req.find("Www-Authenticate");

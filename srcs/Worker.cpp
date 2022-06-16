@@ -16,6 +16,9 @@ HttpResponse Worker::ProcessRequest(HttpRequest* request, const VirtualServer* v
 	if (request->GetPath().find("..") != std::string::npos) {
 		return HttpResponseBuilder::GetInstance().CreateErrorResponse(403, virtual_server);
 	}
+    if (location->client_max_body_size >= 0 && static_cast<long long>(request->GetBody().size()) > location->client_max_body_size) {
+        return HttpResponseBuilder::GetInstance().CreateErrorResponse(413, virtual_server);
+    }
 
 	if (virtual_server->IsCgiPath(request->GetPath()) || location->IsCgiPath(request->GetPath())) {
 		std::cout << "Start CGI" << std::endl;

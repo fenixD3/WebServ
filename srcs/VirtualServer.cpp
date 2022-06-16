@@ -1,5 +1,7 @@
 #include "VirtualServer.h"
 #include <algorithm>
+#include <sstream>
+
 
 const std::string LocationNames::Index = "index";
 const std::string LocationNames::Cgi = "cgi";
@@ -8,6 +10,7 @@ const std::string LocationNames::UriPath = "path";
 const std::string LocationNames::ExceptedMethods = "limit_except";
 const std::string LocationNames::UriCgiExtention = "cgi_extention";
 const std::string LocationNames::UriCgiFile = "cgi_script";
+const std::string LocationNames::BodyLimit = "client_max_body_size";
 
 VirtualServer::VirtualServer() {}
 
@@ -203,7 +206,12 @@ void VirtualServerBuilder::BuildAllRoutes()
 		VirtualServer::UriProps& property = m_VS->m_UriToProperties[uri];
 		property.path = props.at(LocationNames::UriPath);
 		property.uri = uri;
-		if (props.count(LocationNames::UriCgiExtention) && 
+        property.client_max_body_size = -1;
+
+        if (props.count(LocationNames::BodyLimit)) {
+            std::istringstream(props.at(LocationNames::BodyLimit)) >> property.client_max_body_size;
+        }
+		if (props.count(LocationNames::UriCgiExtention) &&
 				props.count(LocationNames::UriCgiFile)) {
 			property.cgi_extention = props.at(LocationNames::UriCgiExtention);
 			property.cgi_script = m_LocationBuilder.GetRoot() + "/" + props.at(LocationNames::UriCgiFile);
