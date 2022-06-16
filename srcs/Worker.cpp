@@ -73,20 +73,29 @@ HttpResponse Worker::ProcessCGIRequest(HttpRequest* request, const VirtualServer
 	CgiWorker cgi_worker;
 	std::string responce_body = cgi_worker.executeCgi(cgi_script_path, request_address, request);
 	int status = 200;
-    if (responce_body.find("Status: ") != std::string::npos) {
-        std::string status_line = responce_body.substr(8, 3);
+    std::string header_bock = "";
+    if (responce_body.find("\r\n\r\n") != std::string::npos) {
+        header_bock = responce_body.substr(0, responce_body.find("\r\n\r\n"));
+        responce_body = responce_body.substr(responce_body.find("\r\n\r\n") + 4);
+    }
+    if (header_bock.find("Status: ") != std::string::npos) {
+        std::string status_line = header_bock.substr(8, 3);
         std::istringstream(status_line) >> status;
-        responce_body = responce_body.substr(responce_body.find("\r\n") + 2);
+        header_bock = header_bock.substr(header_bock.find("\r\n") + 2);
     }
     std::string content_type;
-    if (responce_body.find("Content-Type: ") != std::string::npos)  {
-        size_t line_end = responce_body.find("\r\n");
-        size_t content_start = responce_body.find("Content-Type: ") + std::string("Content-Type: ").size();
-        content_type = responce_body.substr(content_start, line_end - content_start);
-        responce_body = responce_body.substr(line_end + 3);
+    if (header_bock.find("Content-Type: ") != std::string::npos)  {
+        size_t line_end = header_bock.find("\r\n");
+        size_t content_start = header_bock.find("Content-Type: ") + std::string("Content-Type: ").size();
+        content_type = header_bock.substr(content_start, line_end - content_start);
+//        responce_body = responce_body.substr(line_end + 3);
     }
 	HttpResponse response = HttpResponseBuilder::GetInstance().CreateResponse(responce_body, status);
-     response.SetHeader("Content-Type", content_type);
+    if (content_type.size()) {
+        response.SetHeader("Content-Type", content_type);
+    }
+
+
 	return response;
 }
 

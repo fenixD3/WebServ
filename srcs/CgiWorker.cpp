@@ -43,6 +43,13 @@ char** CgiWorker::create_env(std::string cgi_script_path, std::string request_ad
 	}
 	process_env["REQUEST_METHOD"] = request.GetMethod();
 	
+
+    header_iterator iter = request_pointer->begin();
+    while (iter != request_pointer->end()) {
+        process_env["HTTP_" + iter->first] = iter->second;
+        ++iter;
+    }
+	
 	return convert_map_to_c_arr(process_env);
 }
 
@@ -61,7 +68,7 @@ std::string CgiWorker::executeCgi(std::string cgi_script_path, std::string reque
 	// int pipe_out[2];
 	char **env_array;
 	std::string cgi_responce;
-
+    std::remove("./tmp/webserv_cgi");
 	env_array = create_env(cgi_script_path, request_address, request);
 	if (pipe(pipe_in)) { // || pipe(pipe_out)) {
 		throw CgiException();
@@ -89,7 +96,7 @@ std::string CgiWorker::executeCgi(std::string cgi_script_path, std::string reque
             write(pipe_in[1], buff_str.c_str(), request->GetBody().size());
         }
         close(pipe_in[1]);
-		waitpid(-1, NULL, 0);
+		waitpid(pid, NULL, 0);
 		// close(pipe_out[0]);
 	}
 	free_env(env_array);

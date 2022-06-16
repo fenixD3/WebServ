@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestBuilder.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
+/*   By: sergey <sergey@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/06/15 21:37:13 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/06/16 17:14:37 by sergey           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -247,6 +247,9 @@ void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& 
 			{
 				if (is_concat)
 				{
+                    while(line.size() && line.back() == '\r') {
+                        line.pop_back();
+                    }
 					cleared += line;
 				}
 				is_concat = !is_concat;
@@ -261,5 +264,5 @@ void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& 
 		std::cerr << "Read request body with size: " << std::to_string(http_req.m_body.size())  << std::endl;
 		GetQuery(http_req);
 	}
-	std::cerr << http_req.ToString() << std::endl;
+	std::cerr << http_req.ToString().substr(0, 10000) << std::endl;
 }
