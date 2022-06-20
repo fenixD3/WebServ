@@ -1,7 +1,6 @@
 #include "Worker.h"
 #include <sys/stat.h>
 #include "HttpResponseBuilder.h"
-
 #include "CgiWorker.h"
 #include <fstream>
 #include <sstream>
@@ -38,6 +37,9 @@ HttpResponse Worker::ProcessRequest(HttpRequest* request, const VirtualServer* v
 		break;
     case PUT:
         return HttpPost(request, virtual_server, location);
+        break;
+    case DELETE:
+        return HttpDelete(request, virtual_server, location);
         break;
 	default:
 		return HttpResponseBuilder::GetInstance().CreateErrorResponse(501, virtual_server);
@@ -178,24 +180,36 @@ std::string ExtractFileName(HttpRequest* request) {
 }
 
 
-HttpResponse Worker::HttpPost(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
-	// POST метод можно обработать только с помощью CGI
-    std::string file = ExtractFileName(request);
+std::string get_file_path(std::string location_path, std::string location_url, std::string request_path, std::string file_name) {
     std::string file_path;
-    std::string request_path = request->GetPath();
-    if (location->uri.size() > 1) {
-        request_path = request_path.substr(location->uri.size());
+    if (location_url.size() > 1) {
+        request_path = request_path.substr(location_url.size());
     }
-    std::string dir = location->path + request_path;
+    if (!ends_with(request_path, "/")) {
+        file_path = location_path + request_path;
+    } else if (file_name.size()) {
+        file_path = location_path + request_path + "/" + file_name;
+    } else {
+        file_path = location_path + request_path + "/ " + "loaded_file.tmp";
+    }
+    return file_path;
+}
+
+std::string get_file_dir(std::string location_path, std::string request_path) {
+    std::string dir = location_path + request_path;
     if (!ends_with(request_path, "/")) {
         size_t sep = request_path.rfind("/");
-        file_path = location->path + request_path;
-        dir = location->path + request_path.substr(0, sep);
-    } else if (file.size()) {
-        file_path = location->path + request_path + "/" + file;
-    } else {
-        file_path = location->path + request_path + "/ " + "loaded_file.tmp";
+        dir = location_path + request_path.substr(0, sep);
     }
+    return dir;
+}
+
+HttpResponse Worker::HttpPost(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
+    std::string file = ExtractFileName(request);
+    std::string request_path = request->GetPath();
+    std::string file_path = get_file_path(location->path, location->uri, request_path, file);
+    std::string dir = get_file_dir(location->path, request_path);
+
     if (!IsDirExist(dir)) {
         return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, virtual_server);
     }
@@ -209,6 +223,22 @@ HttpResponse Worker::HttpPost(HttpRequest* request, const VirtualServer* virtual
     return response;
 }
 
+HttpResponse Worker::HttpDelete(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
+    std::string file = ExtractFileName(request);
+    std::string request_path = request->GetPath();
+    std::string file_path = get_file_path(location->path, location->uri, request_path, file);
+    std::string dir = get_file_dir(location->path, request_path);
+
+    if (!IsDirExist(dir) || !IsFileExist(file_path)) {
+        return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, virtual_server);
+    }
+
+    std::remove(file_path.c_str());
+
+    HttpResponse response = HttpResponseBuilder::GetInstance().CreateResponse("{status: ok}", 201);
+
+    return response;
+}
 
 //HttpResponse Worker::HttpDelete(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
 //	std::string file_path = ResolvePagePath(request->GetPath(), virtual_server, location);
