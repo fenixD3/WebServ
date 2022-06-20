@@ -195,8 +195,11 @@ std::string get_file_path(std::string location_path, std::string location_url, s
     return file_path;
 }
 
-std::string get_file_dir(std::string location_path, std::string request_path) {
+std::string get_file_dir(std::string location_path, std::string location_url, std::string request_path) {
     std::string dir = location_path + request_path;
+    if (location_url.size() > 1) {
+        request_path = request_path.substr(location_url.size());
+    }
     if (!ends_with(request_path, "/")) {
         size_t sep = request_path.rfind("/");
         dir = location_path + request_path.substr(0, sep);
@@ -208,7 +211,7 @@ HttpResponse Worker::HttpPost(HttpRequest* request, const VirtualServer* virtual
     std::string file = ExtractFileName(request);
     std::string request_path = request->GetPath();
     std::string file_path = get_file_path(location->path, location->uri, request_path, file);
-    std::string dir = get_file_dir(location->path, request_path);
+    std::string dir = get_file_dir(location->path, location->uri, request_path);
 
     if (!IsDirExist(dir)) {
         return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, virtual_server);
@@ -227,7 +230,7 @@ HttpResponse Worker::HttpDelete(HttpRequest* request, const VirtualServer* virtu
     std::string file = ExtractFileName(request);
     std::string request_path = request->GetPath();
     std::string file_path = get_file_path(location->path, location->uri, request_path, file);
-    std::string dir = get_file_dir(location->path, request_path);
+    std::string dir = get_file_dir(location->path, location->uri, request_path);
 
     if (!IsDirExist(dir) || !IsFileExist(file_path)) {
         return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, virtual_server);
