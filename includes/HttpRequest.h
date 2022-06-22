@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.h                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
+/*   By: sergey <sergey@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 16:51:15 by zytrams           #+#    #+#             */
-/*   Updated: 2022/06/06 22:51:46 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/06/22 23:24:57 by sergey           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,6 +133,13 @@ public:
 	{
 		return m_query;
 	};
+
+	bool operator==(const HttpRequest& other) {
+		 if (m_path != other.m_path || m_method != other.m_method || m_body != other.m_body) {
+			return false;
+		}
+		return size() == other.size() && std::equal(begin(), end(), other.begin());
+	}
 
 	std::string& GetBoundary()
 	{

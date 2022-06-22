@@ -28,12 +28,12 @@ void Cluster::Run()
 	{
         int poll_cnt = poll(m_Sockets.GetPdfs(), m_Sockets.GetPdfsSize(), POLL_TIMEOUT);
 		/// TODO: Write Event (temp)
-		std::cerr << "After poll" << std::endl;
+//		std::cerr << "After poll" << std::endl;
 		/// TODO: Write Event (temp_end)
 
         if (poll_cnt == -1)
         {
-            std::cerr << "poll: " << strerror(errno) << std::endl;;
+            // std::cerr << "poll: " << strerror(errno) << std::endl;;
             exit(1);
         }
 
@@ -83,7 +83,7 @@ void Cluster::CreatePhysicalServer(addrinfo *hints, const std::string& ip_number
 	int rv;
 	if ((rv = getaddrinfo((ip_number.empty()) ? NULL : ip_number.c_str(), port_number.c_str(), hints, &results)) != 0)
 	{
-		std::cerr << "Getaddrinfo error: " << gai_strerror(rv) << std::endl;
+		// std::cerr << "Getaddrinfo error: " << gai_strerror(rv) << std::endl;
 		exit(1);
 	}
 
@@ -93,20 +93,20 @@ void Cluster::CreatePhysicalServer(addrinfo *hints, const std::string& ip_number
 	{
 		if ((listening_socket = socket(curr->ai_family, curr->ai_socktype, curr->ai_protocol)) == -1)
 		{
-			std::cerr << "socket: " << strerror(errno) << std::endl;;
+			// std::cerr << "socket: " << strerror(errno) << std::endl;;
 			continue;
 		}
 
 		int yes = 1; /// may be need char for Sun and Win
 		if (setsockopt(listening_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) /// skip "Address already in use" when old socket wasn't closed
 		{
-			std::cerr << "setsockopt: " << strerror(errno) << std::endl;;
+			// std::cerr << "setsockopt: " << strerror(errno) << std::endl;;
 			exit(1);
 		}
 
 		if (bind(listening_socket, curr->ai_addr, curr->ai_addrlen) == -1)
 		{
-			std::cerr << "bind: " << strerror(errno) << std::endl;;
+			// std::cerr << "bind: " << strerror(errno) << std::endl;;
 			continue;
 		}
 		break;
@@ -114,7 +114,7 @@ void Cluster::CreatePhysicalServer(addrinfo *hints, const std::string& ip_number
 
 	if (curr == NULL)
 	{
-		std::cerr << "Error getting listening socket" << std::endl;
+		// std::cerr << "Error getting listening socket" << std::endl;
 		exit(1);
 	}
 
@@ -124,7 +124,7 @@ void Cluster::CreatePhysicalServer(addrinfo *hints, const std::string& ip_number
 
 	if (listen(listening_socket, LISTEN_BACKLOG) == -1)
 	{
-		std::cerr << "listen: " << strerror(errno) << std::endl;;
+		// std::cerr << "listen: " << strerror(errno) << std::endl;;
 		exit(1);
 	}
 
@@ -157,7 +157,7 @@ void Cluster::Accept(IOSocket *event_socket, size_t /*sock_ind*/) /// Почем
 	int connected_socket = accept(event_socket->GetFd(), reinterpret_cast<sockaddr*>(&connecting_address), &storage_size);
 	if (connected_socket == -1)
 	{
-		std::cerr << "accept: " << strerror(errno) << std::endl;;
+		// std::cerr << "accept: " << strerror(errno) << std::endl;;
 	}
 	else
 	{
@@ -194,7 +194,7 @@ void Cluster::Receive(IOSocket *event_socket, size_t sock_ind)
 		}
 		else if (bytes_cnt == -1)
 		{
-			std::cerr << "recv: " << strerror(errno) << std::endl;; /// maybe forbidden due subject /// появлялось recv: Connection reset by peer. Видимо пытался писать в закрытый сокет (надо протестить)
+			// std::cerr << "recv: " << strerror(errno) << std::endl;; /// maybe forbidden due subject /// появлялось recv: Connection reset by peer. Видимо пытался писать в закрытый сокет (надо протестить)
 		}
 		event_socket->SetClientSideClosing(true);
 	}
@@ -224,7 +224,7 @@ void Cluster::Send(IOSocket *event_socket, size_t sock_ind)
 
 		if (sending_bytes == -1)
 		{
-			std::cerr << "send: " << strerror(errno) << std::endl; /// maybe forbidden due subject
+			// std::cerr << "send: " << strerror(errno) << std::endl; /// maybe forbidden due subject
 		}
 		else
 		{
