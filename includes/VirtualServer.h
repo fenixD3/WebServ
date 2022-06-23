@@ -18,15 +18,23 @@ public:
 		std::deque<std::string> excepted_methods;
 		std::string path;
         std::string uri;
+		std::string cgi_extention;
+		std::string cgi_script;
+        long long client_max_body_size;
 
         bool IsMethodAllowed(std::string method) const;
+		bool IsCgiPath(std::string path) const;
+
+		
 	};
 public:
     std::string m_ServerName;
+    std::string m_CgiUri;
 	size_t m_BodyLimit;
 	std::map<std::string, UriProps> m_UriToProperties;
 	std::map<std::string, std::string> m_ErrorRoutes;
 	std::map<std::string, std::string> m_StandardRoutes;
+	bool IsCgiPath(std::string path) const;
 
 public:
 	VirtualServer();
@@ -77,6 +85,9 @@ struct LocationNames
 	static const std::string Upload;
 	static const std::string UriPath;
 	static const std::string ExceptedMethods;
+	static const std::string UriCgiExtention;
+	static const std::string UriCgiFile;
+    static const std::string BodyLimit;
 };
 
 class LocationBuilder
@@ -89,6 +100,7 @@ private:
 
 public:
 	void AddRoot(const std::string& root);
+    std::string GetRoot() const;
 	void AddIndex(const std::string& index_page);
 	void AddError(const std::string& error_code, const std::string& error_page);
 	void AddCgi(const std::string& cgi_path);
@@ -121,3 +133,6 @@ public:
 	void AddUriProperty(const std::string& uri, const std::string& prop_name, const std::string& prop_value);
 	void BuildAllRoutes();
 };
+
+
+bool ends_with(std::string const & value, std::string const & ending);

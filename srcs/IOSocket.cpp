@@ -115,7 +115,7 @@ bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 		filling_msg.msg += recv_buffer.substr(0, end_pos);
 		recv_buffer.erase(0, end_pos);
 
-		if (filling_msg.msg.find(pattern) != std::string::npos)
+		if (filling_msg.msg.find(pattern, filling_msg.msg.size() - pattern.size() - 1) != std::string::npos)
 		{
 			has_been_filled = true;
 		}
@@ -132,7 +132,7 @@ bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 
 		/// TODO: Write Event (temp)
 		filling_msg.body_size_for_read -= recv_buffer.substr(0, boundary_body_pos).size();
-		std::cerr << "Still for read: " << filling_msg.body_size_for_read << std::endl;
+//		std::cerr << "Still for read: " << filling_msg.body_size_for_read << std::endl;
 		/// TODO: Write Event (temp_end)
 
 		recv_buffer.erase(0, boundary_body_pos);
@@ -150,7 +150,7 @@ bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 		recv_buffer.erase(0, how_to_reading);
 		filling_msg.body_size_for_read -= how_to_reading;
 
-		std::cerr << "Still for read: " << filling_msg.body_size_for_read << std::endl;
+//		std::cerr << "Still for read: " << filling_msg.body_size_for_read << std::endl;
 
 		if (filling_msg.body_size_for_read == 0)
 		{

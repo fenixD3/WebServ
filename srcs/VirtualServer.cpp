@@ -1,19 +1,20 @@
 #include "VirtualServer.h"
 #include <algorithm>
+#include <sstream>
+
 
 const std::string LocationNames::Index = "index";
 const std::string LocationNames::Cgi = "cgi";
 const std::string LocationNames::Upload = "upload";
 const std::string LocationNames::UriPath = "path";
 const std::string LocationNames::ExceptedMethods = "limit_except";
+const std::string LocationNames::UriCgiExtention = "cgi_extention";
+const std::string LocationNames::UriCgiFile = "cgi_script";
+const std::string LocationNames::BodyLimit = "client_max_body_size";
 
 VirtualServer::VirtualServer() {}
 
 VirtualServer::UriProps* VirtualServer::GetLocationForUrl(std::string url) {
-	std::cout << this << " GetLocationForUrl " << &m_UriToProperties << std::endl;
-//	std::map<std::string, UriProps>::iterator it;
-  
-	// return m_UriToProperties.begin()->second;
 	std::map<std::string, UriProps>::reverse_iterator it;
     for (it = m_UriToProperties.rbegin(); it != m_UriToProperties.rend(); it++) {
         std::string url_a = url;
@@ -25,11 +26,35 @@ VirtualServer::UriProps* VirtualServer::GetLocationForUrl(std::string url) {
 	return NULL;
 }
 
-bool VirtualServer::UriProps::IsMethodAllowed(std::string method) const {
-    return true;
-    if (method.size()) {
-        return true;
+inline bool ends_with(std::string const & value, std::string const & ending)
+{
+    if (ending.size() > value.size()) {
+		return false;
+	} 
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
+bool VirtualServer::IsCgiPath(std::string path) const {
+	// TODO
+	// check is LocationNames::Cgi key exsist 
+	if (path.rfind(m_CgiUri, 0) == 0) {
+		return true;
+	}
+	return false;
+}
+
+bool VirtualServer::UriProps::IsCgiPath(std::string path) const {
+    if (cgi_extention.empty()) {
+        return false;
     }
+	if (ends_with(path, cgi_extention)) {
+		return true;
+	}
+	return false;
+}
+
+bool VirtualServer::UriProps::IsMethodAllowed(std::string method) const {
+	return find(excepted_methods.begin(), excepted_methods.end(), method) != excepted_methods.end();
 }
 
 VirtualServer::~VirtualServer() {
@@ -46,6 +71,10 @@ std::string VirtualServer::GetErrorPage(int code) const {
 void LocationBuilder::AddRoot(const std::string& root)
 {
 	m_RootPath = root;
+}
+
+std::string LocationBuilder::GetRoot() const {
+    return m_RootPath;
 }
 
 void LocationBuilder::AddIndex(const std::string& index_page)
@@ -164,6 +193,7 @@ void VirtualServerBuilder::AddUriProperty(const std::string& uri, const std::str
 
 void VirtualServerBuilder::BuildAllRoutes()
 {
+    m_VS->m_CgiUri = m_LocationBuilder.GetStandardRoutes()[LocationNames::Cgi];
 	m_LocationBuilder.BuildAllRoutes();
 	m_VS->m_StandardRoutes = m_LocationBuilder.GetStandardRoutes();
 	m_VS->m_ErrorRoutes = m_LocationBuilder.GetErrors();
@@ -176,6 +206,16 @@ void VirtualServerBuilder::BuildAllRoutes()
 		VirtualServer::UriProps& property = m_VS->m_UriToProperties[uri];
 		property.path = props.at(LocationNames::UriPath);
 		property.uri = uri;
+        property.client_max_body_size = -1;
+
+        if (props.count(LocationNames::BodyLimit)) {
+            std::istringstream(props.at(LocationNames::BodyLimit)) >> property.client_max_body_size;
+        }
+		if (props.count(LocationNames::UriCgiExtention) &&
+				props.count(LocationNames::UriCgiFile)) {
+			property.cgi_extention = props.at(LocationNames::UriCgiExtention);
+			property.cgi_script = m_LocationBuilder.GetRoot() + "/" + props.at(LocationNames::UriCgiFile);
+		}
 
 		if (props.count(LocationNames::ExceptedMethods))
 		{

@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   RequestBuilder.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zytrams <zytrams@student.42.fr>            +#+  +:+       +#+        */
+/*   By: sergey <sergey@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/07 18:20:39 by zytrams           #+#    #+#             */
-/*   Updated: 2022/06/06 23:27:20 by zytrams          ###   ########.fr       */
+/*   Updated: 2022/06/21 02:13:49 by sergey           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "RequestBuilder.h"
+#include <sstream>
 
 HttpRequestBuilder::HttpRequestBuilder()
 	: c_message_line("\r\n")
@@ -35,20 +36,20 @@ bool HttpRequestBuilder::ParseInitialFields(HttpRequestBuilder::http_request& re
 
 	if (i == std::string::npos)
 	{
-		std::cerr << "RFL no space after method" << std::endl;
+		// std::cerr << "RFL no space after method" << std::endl;
 		return false;
 	}
 	req.m_method.assign(line, 0, i);
 	if (ToHttpMethod(req.m_method) == UNKNOWN)
 	{
-		std::cerr << "Invalid method requested" << std::endl;
+		// std::cerr << "Invalid method requested" << std::endl;
 		return false;
 	}
 
 	// PATH
 	if ((j = line.find_first_not_of(' ', i)) == std::string::npos)
 	{
-		std::cerr << "No PATH / HTTP version" << std::endl;
+		// std::cerr << "No PATH / HTTP version" << std::endl;
 		return false;
 	}
 	if ((i = line.find_first_of(' ', j)) == std::string::npos)
@@ -151,7 +152,7 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 	std::string boundary;
 	bool is_valid = true;
 	size_t cur_size = 0;
-	std::cerr << "Start building request" <<std::endl;
+	// std::cerr << "Start building request" <<std::endl;
 
 	std::string parsing_msg;
 	if (http_req.m_header_size == 0)
@@ -174,17 +175,17 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 			&& ToHttpMethod(http_req.m_method) == POST
 			&& ParseBoundary(boundary, current))
 		{
-			std::cerr << "Found tag boundary : " << boundary << std::endl;
+			// std::cerr << "Found tag boundary : " << boundary << std::endl;
 			http_req.m_boundary = boundary;
 		}
 		ParseKey(key, current);
 		ParseValue(value, current);
-		if (key.find("Secret") != std::string::npos)
-			http_req.m_cgi_env[MakeHeaderForCGI(key)] = value;
-		else
-		{
+//		if (key.find("Secret") != std::string::npos)
+//			http_req.m_cgi_env[MakeHeaderForCGI(key)] = value;
+//		else
+//		{
 			http_req[key] = value;
-		}
+//		}
 	}
 
 	header_iterator itWWWAuth = http_req.find("Www-Authenticate");
@@ -218,7 +219,7 @@ std::pair<bool, std::string> HttpRequestBuilder::BuildHttpRequestHeader(const st
 	http_req.m_is_valid = is_valid;
 	http_req.m_header_size += cur_size;
 
-	std::cerr << "Read request header with validity status: " + std::to_string(http_req.m_is_valid)  << std::endl;
+	// std::cerr << "Read request header with validity status: " + std::to_string(http_req.m_is_valid)  << std::endl;
 	return std::make_pair(!boundary.empty(), !boundary.empty() ? "--" + boundary + "--\r\n" : "");
 }
 
@@ -226,7 +227,7 @@ void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& 
 {
 	std::string current;
 
-	std::cerr << "READ BODY" << std::endl;
+	// std::cerr << "READ BODY" << std::endl;
 	if (http_req.m_is_valid)
 	{
 		size_t end_body = std::string::npos;
@@ -234,11 +235,34 @@ void HttpRequestBuilder::BuildHttpRequestBody(HttpRequestBuilder::http_request& 
 		{
 			end_body = msg.find("--" + http_req.m_boundary + "--\r\n") - http_req.m_header_size;
 		}
-
+		
 		current = msg.substr(http_req.m_header_size, end_body);
-		http_req.m_body = std::vector<char>(current.begin(), current.end());
-		std::cerr << "Read request body with size: " << std::to_string(http_req.m_body.size())  << std::endl;
+
+		std::istringstream iss(current);
+		std::string cleared;
+		if (http_req.GetTransferEncoding() == CHUNKED)
+		{
+			bool is_concat = false;
+			for (std::string line; std::getline(iss, line); )
+			{
+				if (is_concat)
+				{
+                    while(line.size() && line.back() == '\r') {
+                        line.pop_back();
+                    }
+					cleared += line;
+				}
+				is_concat = !is_concat;
+			}
+		}
+		else
+		{
+			cleared = current;
+		}
+
+		http_req.m_body = std::vector<char>(cleared.begin(), cleared.end());
+		// std::cerr << "Read request body with size: " << std::to_string(http_req.m_body.size())  << std::endl;
 		GetQuery(http_req);
 	}
-	std::cerr << http_req.ToString() << std::endl;
+//	std::cerr << http_req.ToString().substr(0, 10000) << std::endl;
 }

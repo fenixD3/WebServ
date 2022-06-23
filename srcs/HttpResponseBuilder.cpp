@@ -10,7 +10,8 @@ std::string ReadFile(std::string path) {
 	std::string content = std::string((std::istreambuf_iterator<char>(file)),
                   (std::istreambuf_iterator<char>()));
 	if (!file) {
-		return std::string("<!DOCTYPE html><html><body><h1>Error: can't read file ") + path + std::string(".</h1></body></html>");
+        return "";
+//		return std::string("<!DOCTYPE html><html><body><h1>Error: can't read file ") + path + std::string(".</h1></body></html>");
 	}
 	return content;
 }

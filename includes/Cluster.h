@@ -12,7 +12,7 @@
 #include "config/IConfig.h"
 #include "RequestBuilder.h"
 
-#define LISTEN_BACKLOG 10
+#define LISTEN_BACKLOG 4000
 
 struct addrinfo;
 
