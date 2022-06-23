@@ -115,7 +115,7 @@ bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 		filling_msg.msg += recv_buffer.substr(0, end_pos);
 		recv_buffer.erase(0, end_pos);
 
-		if (filling_msg.msg.find(pattern) != std::string::npos)
+		if (filling_msg.msg.find(pattern, filling_msg.msg.size() - pattern.size() - 1) != std::string::npos)
 		{
 			has_been_filled = true;
 		}
