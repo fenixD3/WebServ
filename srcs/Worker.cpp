@@ -12,6 +12,9 @@ HttpResponse Worker::ProcessRequest(HttpRequest* request, const VirtualServer* v
 	if (!location || !virtual_server || !location->IsMethodAllowed(request->GetMethod())) {
 		return HttpResponseBuilder::GetInstance().CreateErrorResponse(405, virtual_server);
 	}
+    if (location->redirect.size()) {
+        return RedirectResponse(location->redirect);
+    }
 	if (request->GetPath().find("..") != std::string::npos) {
 		return HttpResponseBuilder::GetInstance().CreateErrorResponse(403, virtual_server);
 	}
@@ -19,7 +22,7 @@ HttpResponse Worker::ProcessRequest(HttpRequest* request, const VirtualServer* v
         return HttpResponseBuilder::GetInstance().CreateErrorResponse(413, virtual_server);
     }
 
-	if (virtual_server->IsCgiPath(request->GetPath()) || location->IsCgiPath(request->GetPath())) {
+	if (location->IsCgiPath(request->GetPath())) {
 		std::cout << "Start CGI" << std::endl;
 		return ProcessCGIRequest(request, virtual_server, location);
 	}
@@ -78,28 +81,40 @@ HttpResponse Worker::ProcessCGIRequest(HttpRequest* request, const VirtualServer
 	CgiWorker cgi_worker;
 	std::string responce_body = cgi_worker.executeCgi(cgi_script_path, request_address, request);
 	int status = 200;
-    std::string header_bock = "";
+    std::string header_block = "";
     if (responce_body.find("\r\n\r\n") != std::string::npos) {
-        header_bock = responce_body.substr(0, responce_body.find("\r\n\r\n"));
+        header_block = responce_body.substr(0, responce_body.find("\r\n\r\n"));
         responce_body = responce_body.substr(responce_body.find("\r\n\r\n") + 4);
     }
-    if (header_bock.find("Status: ") != std::string::npos) {
-        std::string status_line = header_bock.substr(8, 3);
-        std::istringstream(status_line) >> status;
-        header_bock = header_bock.substr(header_bock.find("\r\n") + 2);
-    }
-    std::string content_type;
-    if (header_bock.find("Content-Type: ") != std::string::npos)  {
-        size_t line_end = header_bock.find("\r\n");
-        size_t content_start = header_bock.find("Content-Type: ") + std::string("Content-Type: ").size();
-        content_type = header_bock.substr(content_start, line_end - content_start);
-//        responce_body = responce_body.substr(line_end + 3);
+
+    std::map<std::string, std::string> headers;
+
+    while(header_block.size()) {
+        size_t line_end = header_block.find("\r\n");
+        std::string line;
+        if (line_end == std::string::npos) {
+            line = header_block;
+            header_block = "";
+        } else {
+            line = header_block.substr(0, line_end);
+            header_block = header_block.substr(line_end + 2);
+        }
+        size_t sep = line.find(": ");
+        if (sep == std::string::npos) {
+            break;
+        }
+        std::string key = line.substr(0, sep);
+        std::string value = line.substr(sep + 2);
+        if (key == "Status") {
+            std::istringstream(value) >> status;
+        } else {
+            headers[key] = value;
+        }
     }
 	HttpResponse response = HttpResponseBuilder::GetInstance().CreateResponse(responce_body, status);
-    if (content_type.size()) {
-        response.SetHeader("Content-Type", content_type);
-    }
-
+    for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it) {
+        response.SetHeader(it->first, it->second);
+	}
 
 	return response;
 }
@@ -243,11 +258,8 @@ HttpResponse Worker::HttpDelete(HttpRequest* request, const VirtualServer* virtu
     return response;
 }
 
-//HttpResponse Worker::HttpDelete(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
-//	std::string file_path = ResolvePagePath(request->GetPath(), virtual_server, location);
-//
-//	if (IsFileExist(file_path)) {
-//		remove(file_path.c_str());
-//	}
-//	return HttpResponseBuilder::GetInstance().CreateResponse("{\"success\":\"true\"}", 200);
-//}
+HttpResponse Worker::RedirectResponse(std::string redirect_page) {
+    HttpResponse response = HttpResponseBuilder::GetInstance().CreateResponse("Moved Permanently", 301);
+    response.SetHeader("Location", redirect_page);
+    return response;
+}

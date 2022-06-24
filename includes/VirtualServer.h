@@ -20,6 +20,7 @@ public:
         std::string uri;
 		std::string cgi_extention;
 		std::string cgi_script;
+        std::string redirect;
         long long client_max_body_size;
 
         bool IsMethodAllowed(std::string method) const;
@@ -88,6 +89,7 @@ struct LocationNames
 	static const std::string UriCgiExtention;
 	static const std::string UriCgiFile;
     static const std::string BodyLimit;
+    static const std::string Redirect;
 };
 
 class LocationBuilder

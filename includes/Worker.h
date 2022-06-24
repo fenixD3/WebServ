@@ -14,6 +14,7 @@ private:
 //	HttpResponse HttpDelete(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location);
 	HttpResponse ProcessCGIRequest(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location);
 	HttpResponse HttpDelete(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location);
+    HttpResponse RedirectResponse(std::string redirect_page);
 	bool IsFileExist(std::string file_path);
     bool IsPathExist(std::string path);
     bool IsDirExist(std::string file_path);

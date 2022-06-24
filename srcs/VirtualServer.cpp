@@ -11,6 +11,9 @@ const std::string LocationNames::ExceptedMethods = "limit_except";
 const std::string LocationNames::UriCgiExtention = "cgi_extention";
 const std::string LocationNames::UriCgiFile = "cgi_script";
 const std::string LocationNames::BodyLimit = "client_max_body_size";
+const std::string LocationNames::Redirect = "redirect";
+
+
 
 VirtualServer::VirtualServer() {}
 
@@ -207,7 +210,9 @@ void VirtualServerBuilder::BuildAllRoutes()
 		property.path = props.at(LocationNames::UriPath);
 		property.uri = uri;
         property.client_max_body_size = -1;
-
+        if (props.count(LocationNames::LocationNames::Redirect)) {
+            property.redirect = props.at(LocationNames::Redirect);
+        }
         if (props.count(LocationNames::BodyLimit)) {
             std::istringstream(props.at(LocationNames::BodyLimit)) >> property.client_max_body_size;
         }
