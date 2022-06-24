@@ -4,6 +4,7 @@
 #include "CgiWorker.h"
 #include <fstream>
 #include <sstream>
+#include <dirent.h>
 
 Worker::Worker() {}
 Worker::~Worker() {}
@@ -155,14 +156,36 @@ bool Worker::IsFileExist(std::string file_path) {
     return S_ISREG(buffer.st_mode);
 }
 
+std::string ListDir(std::string dir_path) {
+    std::string dirs_string;
+    struct dirent *entry;
+    DIR *dir = opendir(dir_path.c_str());
+    if (dir == NULL) {
+        return dirs_string;
+    }
 
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_DIR) {
+            dirs_string += "/";
+        }
+        dirs_string += entry->d_name;
+        dirs_string += "<br/>\n";
+    }
+    closedir(dir);
+    return dirs_string;
+}
 
 
 HttpResponse Worker::HttpGet(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
 	std::string file_path = ResolvePagePath(request->GetPath(), virtual_server, location);
 
 	if (!IsFileExist(file_path)) {
-		return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, virtual_server);
+        std::string dir_path = location->path + "/" + request->GetPath().substr(location->uri.size());
+        if (IsDirExist(dir_path)) {
+            return HttpResponseBuilder::GetInstance().CreateResponse(ListDir(dir_path), 200);
+        } else {
+            return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, virtual_server);
+        }
 	}
 
 	std::string file_content = ReadFile(file_path);
