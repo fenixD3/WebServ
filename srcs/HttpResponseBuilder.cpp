@@ -2,18 +2,20 @@
 #include "HttpResponseBuilder.h"
 #include <fstream>
 #include <sys/time.h>
-
+#include <sstream>
+#include <fstream>
 
 std::string ReadFile(std::string path) {
 	std::ifstream file(path);
 
-	std::string content = std::string((std::istreambuf_iterator<char>(file)),
-                  (std::istreambuf_iterator<char>()));
-	if (!file) {
+	std::ifstream m_stream(path);
+
+	if (!file.good()) {
         return "";
-//		return std::string("<!DOCTYPE html><html><body><h1>Error: can't read file ") + path + std::string(".</h1></body></html>");
 	}
-	return content;
+	std::stringstream ss;
+	ss << m_stream.rdbuf();
+	return ss.str();
 }
 
 std::string HttpResponseBuilder::GetFormatedDate() {

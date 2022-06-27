@@ -14,8 +14,8 @@ VirtualServer* PhysicalServer::ResolveUrlToServer(HttpRequest *request) {
     if (request->find("Host") == request->end()) {
         return m_NameToVirtualServers.begin()->second.get();
     }
-    for (std::map<std::string, raii_ptr<VirtualServer> >::iterator it = m_NameToVirtualServers.begin();
-                                                                it != m_NameToVirtualServers.end(); ++it) {
+    for (std::map<std::string, raii_ptr<VirtualServer> >::reverse_iterator it = m_NameToVirtualServers.rbegin();
+                                                                it != m_NameToVirtualServers.rend(); ++it) {
 	 	if (request->at("Host").rfind(it->first, 0) == 0) {
              return it->second.get();
          }
