@@ -182,7 +182,7 @@ HttpResponse Worker::HttpGet(HttpRequest* request, const VirtualServer* virtual_
 	if (!IsFileExist(file_path)) {
         std::string dir_path = location->path + "/" + request->GetPath().substr(location->uri.size());
         if (IsDirExist(dir_path)) {
-            return HttpResponseBuilder::GetInstance().CreateResponse(ListDir(dir_path), 200);
+            return HttpResponseBuilder::GetInstance().CreateResponse(ListDir(dir_path), 404);
         } else {
             return HttpResponseBuilder::GetInstance().CreateErrorResponse(404, virtual_server);
         }
