@@ -265,6 +265,9 @@ void Config::ParseLocations(const std::deque<std::string>& block_instructions, V
 
 bool Config::IsExistSameServer(const std::string& port, const std::string& serv_name)
 {
+    if (m_PortToVirtualServers.find(port) == m_PortToVirtualServers.end()) {
+        return false;
+    }
 	const std::deque<VirtualServer*>& servers = m_PortToVirtualServers.at(port);
 	for (size_t i = 0; i < servers.size(); ++i)
 	{
