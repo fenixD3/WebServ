@@ -2,7 +2,7 @@
 import requests
 
 URL = "http://localhost:8080"
-
+FILE_CONTENT = "test file"
 
 RED = "\033[31m"
 GREEN = "\033[32m"
@@ -48,6 +48,8 @@ def test_head_method_3():
 def test_head_method_4():
 	return test_get_method("/dir", "index in dir")
 
+def test_post_and_delete_method_1():
+	return test_post_and_delete_method("/upload/")
 
 
 def run_test(test_method):
@@ -62,6 +64,27 @@ def run_test(test_method):
 
 	
 
+def test_post_and_delete_method(url = "", expected = ""):
+	# UPLOAD FILE
+	req = requests.post(URL + url, FILE_CONTENT, headers={"Content-Disposition": "attachment; filename=\"test.test\""})
+	if req.status_code != 201:
+		return f"Incorrect status: {req.status_code}"
+	
+	# LOAD FILE
+	req = requests.get(URL + url + "/test.test")
+	if req.status_code != 200:
+		return f"Incorrect status: {req.status_code}"
+	if req.text != FILE_CONTENT:
+		return f"Incorrect body: {req.text}"
+	
+	# DELETE FILE
+	req = requests.delete(URL + url + "/test.test")
+	if req.status_code != 201:
+		return f"Incorrect status: {req.status_code}"
+	
+
+	return ""
+	
 
 
 if __name__ == "__main__":
@@ -73,6 +96,7 @@ if __name__ == "__main__":
 	run_test(test_head_method_2)
 	run_test(test_head_method_3)
 	run_test(test_head_method_4)
+	run_test(test_post_and_delete_method_1)
 
 
 

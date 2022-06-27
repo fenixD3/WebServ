@@ -247,6 +247,9 @@ std::string get_file_dir(std::string location_path, std::string location_url, st
 
 HttpResponse Worker::HttpPost(HttpRequest* request, const VirtualServer* virtual_server, const VirtualServer::UriProps* location) {
     std::string file = ExtractFileName(request);
+    if (file.empty()) {
+        file = "default_file";
+    }
     std::string request_path = request->GetPath();
     std::string file_path = get_file_path(location->path, location->uri, request_path, file);
     std::string dir = get_file_dir(location->path, location->uri, request_path);
