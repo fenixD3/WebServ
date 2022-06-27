@@ -27,9 +27,6 @@ void Cluster::Run()
     while(true)
 	{
         int poll_cnt = poll(m_Sockets.GetPdfs(), m_Sockets.GetPdfsSize(), POLL_TIMEOUT);
-		/// TODO: Write Event (temp)
-//		std::cerr << "After poll" << std::endl;
-		/// TODO: Write Event (temp_end)
 
         if (poll_cnt == -1)
         {

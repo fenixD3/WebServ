@@ -130,11 +130,6 @@ bool IOSocket::FillRequestMsg(ReceivingQueue::receiving_msg_type& filling_msg,
 		}
 		filling_msg.msg += recv_buffer.substr(0, boundary_body_pos);
 
-		/// TODO: Write Event (temp)
-		filling_msg.body_size_for_read -= recv_buffer.substr(0, boundary_body_pos).size();
-//		std::cerr << "Still for read: " << filling_msg.body_size_for_read << std::endl;
-		/// TODO: Write Event (temp_end)
-
 		recv_buffer.erase(0, boundary_body_pos);
 
 		if (filling_msg.msg.find(filling_msg.boundary_end) != std::string::npos)
