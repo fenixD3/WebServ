@@ -56,6 +56,7 @@ public:
 private:
 	std::string ParseServer(const std::deque<std::string>& block_instructions, VirtualServerBuilder& vs_builder);
 	void ParseLocations(const std::deque<std::string>& block_instructions, VirtualServerBuilder& vs_builder);
+	bool IsExistSameServer(const std::string& port, const std::string& serv_name);
 };
 
 std::string ExtractLogicPart(std::istream& where_extract, const char delimiter = '\n');

@@ -134,6 +134,8 @@ public:
 	void AddUpload(const std::string& upload_path);
 	void AddUriProperty(const std::string& uri, const std::string& prop_name, const std::string& prop_value);
 	void BuildAllRoutes();
+
+	std::string& GetServerName() const;
 };
 
 

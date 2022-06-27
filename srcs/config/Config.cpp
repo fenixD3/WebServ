@@ -67,6 +67,11 @@ bool BlockExtractor::TryExtract(std::map<std::string, std::deque<std::string> >&
 			continue;
 		}
 		size_t instruction_end = line.find(BlockExtractor::InstructionEndPattern);
+		if (instruction_end == std::string::npos)
+		{
+			std::cerr << "Instruction must be ended ';'" << std::endl;
+			exit(EXIT_FAILURE);
+		}
 		out_block_content[block_name].push_back(line.erase(instruction_end));
 	}
 
@@ -112,6 +117,11 @@ void Config::Process()
 		std::string port = ParseServer(block_instructions["server"], vs_builder);
 		ParseLocations(block_instructions["location"], vs_builder);
 		vs_builder.BuildAllRoutes();
+		if (IsExistSameServer(port, vs_builder.GetServerName()))
+		{
+			std::cerr << "There are two equals server" << std::endl;
+			exit(EXIT_FAILURE);
+		}
 		m_PortToVirtualServers[port].push_back(vs_builder);
 
 		/// Test output
@@ -251,6 +261,19 @@ void Config::ParseLocations(const std::deque<std::string>& block_instructions, V
 		}
 		vs_builder.AddUriProperty(uri_value, name, value);
 	}
+}
+
+bool Config::IsExistSameServer(const std::string& port, const std::string& serv_name)
+{
+	const std::deque<VirtualServer*>& servers = m_PortToVirtualServers.at(port);
+	for (size_t i = 0; i < servers.size(); ++i)
+	{
+		if (servers[i]->m_ServerName == serv_name)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 const IConfig::physical_ports_ip_cont& Config::GetPhysicalEndpoints() const

@@ -242,3 +242,7 @@ void VirtualServerBuilder::BuildAllRoutes()
 	}
 }
 
+std::string& VirtualServerBuilder::GetServerName() const
+{
+	return m_VS->m_ServerName;
+}
